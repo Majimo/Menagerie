@@ -66,3 +66,40 @@ test('les contrôles interactifs font au moins 44 × 44 px', async ({ page }) =>
   }
   expect(tooSmall).toEqual([]);
 });
+
+test('aucune violation axe avec les panneaux d’inspection et le choix de l’espèce', async ({ page }) => {
+  await openGame(page, { scenario: 'animal-needs' });
+  await page.getByRole('button', { name: 'Animaux' }).click();
+  await expect(page.getByRole('group', { name: 'Espèce à placer' })).toBeVisible();
+  const lion = await page.evaluate(
+    () => Object.values(window.__game?.getState().animals ?? {}).find((a) => a.species === 'lion')?.id ?? 0,
+  );
+  await page.evaluate((id) => window.__game?.inspect({ kind: 'animal', id }), lion);
+  await expect(page.getByTestId('inspector')).toBeVisible();
+  expect(await blockingViolations(page)).toEqual([]);
+  await page.getByRole('button', { name: 'Voir l’enclos' }).click();
+  await expect(page.getByTestId('inspector')).toContainText('Animaux');
+  expect(await blockingViolations(page)).toEqual([]);
+  await page.evaluate(() => window.__game?.inspect({ kind: 'zoo' }));
+  await expect(page.getByTestId('inspector')).toContainText('Enclos du zoo');
+  expect(await blockingViolations(page)).toEqual([]);
+});
+
+test('les contrôles des panneaux font au moins 44 × 44 px', async ({ page }) => {
+  await openGame(page, { scenario: 'animal-needs' });
+  await page.getByRole('button', { name: 'Objets' }).click();
+  await page.evaluate(() => window.__game?.inspect({ kind: 'zoo' }));
+  await expect(page.getByTestId('inspector')).toBeVisible();
+  const controls = page.locator('#ui button');
+  const tooSmall: string[] = [];
+  for (const control of await controls.all()) {
+    if (!(await control.isVisible())) continue;
+    const box = await control.boundingBox();
+    if (box && (box.width < MIN_TOUCH_TARGET || box.height < MIN_TOUCH_TARGET)) {
+      tooSmall.push(
+        `${await control.evaluate((el) => el.outerHTML.slice(0, 80))} (${box.width}×${box.height})`,
+      );
+    }
+  }
+  expect(tooSmall).toEqual([]);
+});

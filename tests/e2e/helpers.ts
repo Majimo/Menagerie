@@ -5,7 +5,7 @@ import '../../src/debug/gameApi';
 // Utilitaires partagés par les specs Playwright.
 
 /** Itération courante : dossier de sortie des captures. Surcharge possible par `ITERATION=…`. */
-export const ITERATION = process.env.ITERATION ?? '1';
+export const ITERATION = process.env.ITERATION ?? '2';
 
 export const ZOOMS = ['far', 'mid', 'close'] as const;
 

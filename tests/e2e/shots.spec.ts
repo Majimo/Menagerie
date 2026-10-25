@@ -6,7 +6,13 @@ import type { ScenarioName } from './scenarios';
 // Captures pour la revue visuelle : artifacts/screenshots/<iteration>/<scenario>_<viewport>_<zoom>.png.
 // Ce ne sont pas des tests pixel à pixel : elles sont ouvertes et revues avec la grille de docs/09.
 
-const SCENARIOS: ScenarioName[] = ['empty-map', 'first-enclosure', 'full-map'];
+const SCENARIOS: ScenarioName[] = [
+  'empty-map',
+  'first-enclosure',
+  'full-map',
+  'four-species',
+  'animal-needs',
+];
 const OUT_DIR = `artifacts/screenshots/${ITERATION}`;
 
 async function nextFrames(page: Page): Promise<void> {
@@ -82,4 +88,89 @@ test('capture après un quart de tour de caméra @shots', async ({ page }, testI
   });
   await nextFrames(page);
   await page.screenshot({ path: `${OUT_DIR}/first-enclosure-rotated_${testInfo.project.name}_mid.png` });
+});
+
+// --- Itération 2 : animaux -------------------------------------------------------------------------------
+
+/** Centre de chaque enclos du scénario four-species. */
+const SPECIES_FOCUS = {
+  zebra: { x: 15, y: 33 },
+  giraffe: { x: 24, y: 33 },
+  lion: { x: 33, y: 33 },
+  panda: { x: 15, y: 24 },
+} as const;
+
+test('test de silhouette des 4 espèces @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'Une seule taille suffit');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'four-species' });
+  await page.evaluate(() => {
+    window.__game?.freezeTime();
+    window.__game?.silhouette(true);
+  });
+  for (const [species, focus] of Object.entries(SPECIES_FOCUS)) {
+    await page.evaluate((tile) => window.__game?.setCamera('close', tile), focus);
+    await nextFrames(page);
+    await page.screenshot({ path: `${OUT_DIR}/silhouette-${species}_${testInfo.project.name}_close.png` });
+  }
+  await page.evaluate(() => window.__game?.setCamera('mid'));
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/silhouette-all_${testInfo.project.name}_mid.png` });
+});
+
+test('capture de nuit : animaux endormis @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'wide', 'Desktop et mobile suffisent');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'four-species' });
+  await page.evaluate(() => {
+    const game = window.__game;
+    game?.freezeTime();
+    // Scénario à 14 h ; 23 h = 9 heures plus tard, 50 ticks par heure.
+    game?.advance(450);
+    game?.setCamera('mid');
+  });
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/four-species-night_${testInfo.project.name}_mid.png` });
+});
+
+for (const deficiency of ['protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'] as const) {
+  test(`états des animaux sous ${deficiency} @shots`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Une seule taille suffit');
+    mkdirSync(OUT_DIR, { recursive: true });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: deficiency });
+    await openGame(page, { scenario: 'animal-needs' });
+    await page.evaluate(() => {
+      window.__game?.freezeTime();
+      window.__game?.setCamera('mid');
+    });
+    await nextFrames(page);
+    await page.screenshot({ path: `${OUT_DIR}/animal-needs-${deficiency}_${testInfo.project.name}_mid.png` });
+  });
+}
+
+test('panneaux d’inspection d’un animal et d’un enclos @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'wide', 'Desktop et mobile suffisent');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'animal-needs' });
+  const lion = await page.evaluate(() => {
+    const game = window.__game;
+    game?.freezeTime();
+    game?.setCamera('mid');
+    const found = Object.values(game?.getState().animals ?? {}).find((a) => a.species === 'lion');
+    return found?.id ?? 0;
+  });
+  await page.evaluate((id) => window.__game?.inspect({ kind: 'animal', id }), lion);
+  await page.getByTestId('inspector').waitFor();
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/panel-animal_${testInfo.project.name}_mid.png` });
+
+  const enclosure = await page.evaluate(
+    (id) => window.__game?.getState().animals[id]?.enclosureId ?? 0,
+    lion,
+  );
+  await page.evaluate((id) => window.__game?.inspect({ kind: 'enclosure', id }), enclosure);
+  await page.waitForTimeout(300);
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/panel-enclosure_${testInfo.project.name}_mid.png` });
 });
