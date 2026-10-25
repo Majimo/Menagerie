@@ -25,6 +25,8 @@ sont ravis ou déçus, et paient. Le but : un zoo rentable **et** des animaux he
 | Lint / format | Biome |
 | Déploiement | Web statique (PWA), puis Tauri / Capacitor si besoin |
 
+Version en ligne (déployée à chaque push sur `main`) : https://majimo.github.io/Menagerie/
+
 ## Démarrage rapide
 
 ```bash
@@ -60,7 +62,7 @@ la vérifie et la clôture. On peut aussi cibler une itération : `/jalon-suivan
 
 ## Statut
 
-- [ ] Itération 0 : setup
+- [x] Itération 0 : setup
 - [ ] Itération 1 : monde, caméra, construction
 - [ ] Itération 2 : animaux
 - [ ] Itération 3 : visiteurs et économie

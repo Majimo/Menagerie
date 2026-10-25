@@ -25,10 +25,10 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 - Playwright + axe-core, `playwright.config.ts`, scripts `test:e2e` et `shots`, API `window.__game` (squelette), dossier `artifacts/` dans `.gitignore`.
 
 **Critères d'acceptation**
-- [ ] `npm run check` passe sur un projet neuf.
-- [ ] L'URL publique affiche le canvas.
-- [ ] Une règle de lint ou de test interdit l'import de `three` et du DOM dans `src/sim/`.
-- [ ] `npm run shots` produit une capture du canvas dans `artifacts/screenshots/0/` et un test axe passe sur la page.
+- [x] `npm run check` passe sur un projet neuf.
+- [x] L'URL publique affiche le canvas.
+- [x] Une règle de lint ou de test interdit l'import de `three` et du DOM dans `src/sim/`.
+- [x] `npm run shots` produit une capture du canvas dans `artifacts/screenshots/0/` et un test axe passe sur la page.
 
 **Prompt de lancement** : « Lis CLAUDE.md et docs/03-architecture.md, puis réalise l'itération 0 de docs/05-roadmap-poc.md. »
 

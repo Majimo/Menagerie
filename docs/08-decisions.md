@@ -100,7 +100,8 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
 - **Conséquences** : captures reproductibles ; le build de production n'est pas couvert par les tests e2e (vérifié à la main).
 
 ## ADR-014 : Hébergement sur GitHub Pages
-- **Statut** : proposé, à confirmer à la mise en ligne
+- **Statut** : accepté (itération 0) ; dépôt public `Majimo/Menagerie`, site https://majimo.github.io/Menagerie/
+- **Contexte** : GitHub Pages n'est pas disponible sur un dépôt privé avec un compte gratuit ; le dépôt a été rendu public.
 - **Décision** : workflow `.github/workflows/deploy.yml` (check, build, publication) ; `base` fixé par la variable
   `BASE_PATH` (`/<nom-du-repo>/` en CI, `/` par défaut) ; Three.js isolé dans un chunk `three` (~130 ko gzip).
 - **Conséquences** : bascule vers Cloudflare Pages ou Netlify possible sans changer le code (seulement `BASE_PATH`).
