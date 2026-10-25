@@ -4,11 +4,13 @@ import { CanvasTexture, LinearFilter, Sprite, SpriteMaterial, SRGBColorSpace } f
 
 const FONT_PX = 44;
 const PADDING_PX = 18;
+/** Hauteur affichée de l'étiquette, en pixels CSS. */
+const LABEL_HEIGHT_PX = 28;
 
 export interface Label {
   readonly sprite: Sprite;
-  /** Ajuste la taille au zoom : `viewSize` = étendue visible du monde en tuiles. */
-  setViewSize(viewSize: number): void;
+  /** Garde une hauteur constante à l'écran, quel que soit le zoom. */
+  setWorldPerPixel(worldPerPixel: number): void;
 }
 
 export function createLabel(text: string, background: string, ink: string): Label {
@@ -40,8 +42,8 @@ export function createLabel(text: string, background: string, ink: string): Labe
 
   return {
     sprite,
-    setViewSize(viewSize) {
-      const h = Math.min(Math.max(viewSize * 0.045, 0.45), 2.2);
+    setWorldPerPixel(worldPerPixel) {
+      const h = LABEL_HEIGHT_PX * worldPerPixel;
       sprite.scale.set(h * aspect, h, 1);
     },
   };

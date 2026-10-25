@@ -11,7 +11,8 @@ const MIN_VIEW_SIZE = 5;
 
 const ELEVATION = Math.atan(1 / Math.SQRT2);
 const BASE_AZIMUTH = Math.PI / 4;
-const DISTANCE = 100;
+/** Assez loin pour que le sol au bas d'un écran portrait reste devant le plan proche. */
+const DISTANCE = 300;
 /** Vitesse de rotation animée (part de l'écart restant comblée par seconde, approximativement). */
 const ROTATION_RATE = 12;
 
@@ -32,12 +33,14 @@ export interface IsoCamera {
   /** Avance l'animation de rotation ; `instant` : sans animation (mouvement réduit, captures). */
   update(deltaMs: number, instant: boolean): void;
   readonly viewSize: number;
+  /** Taille d'un pixel écran en unités du monde (pour des éléments de taille constante à l'écran). */
+  readonly worldPerPixel: number;
   /** Rotation demandée, en quarts de tour depuis l'orientation de départ. */
   readonly quarterTurns: number;
 }
 
 export function createIsoCamera(map: MapBounds): IsoCamera {
-  const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  const camera = new OrthographicCamera(-1, 1, 1, -1, 1, 1000);
   const target = new Vector3(map.width / 2, 0, map.height / 2);
   let viewSize = VIEW_SIZE.mid;
   let aspect = 1;
@@ -87,6 +90,9 @@ export function createIsoCamera(map: MapBounds): IsoCamera {
     camera,
     get viewSize() {
       return viewSize;
+    },
+    get worldPerPixel() {
+      return visibleHeight() / pixelHeight;
     },
     get quarterTurns() {
       return rotationSteps;

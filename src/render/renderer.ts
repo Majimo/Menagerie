@@ -85,7 +85,7 @@ export function createRenderer(
       terrain.update(state.world);
       fences.update(state.world);
       preview.update(state.world, state.enclosures, currentPreview, iso.quarterTurns);
-      gates.setViewSize(iso.viewSize);
+      gates.setWorldPerPixel(iso.worldPerPixel);
       renderer.render(scene, iso.camera);
     },
     setCameraPreset(preset, target) {
@@ -120,7 +120,7 @@ function addLights(scene: Scene, world: Readonly<World>): void {
 }
 
 function createSurround(world: Readonly<World>): Mesh {
-  const margin = 40;
+  const margin = 400;
   const ground = new Mesh(
     new PlaneGeometry(world.width + margin * 2, world.height + margin * 2),
     new MeshStandardMaterial({ color: SURROUND, roughness: 1 }),
