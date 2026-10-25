@@ -6,6 +6,14 @@ argument-hint: "[numéro d'itération optionnel, ex. 2]"
 
 Tu enchaînes le prochain jalon du projet. Argument éventuel : $ARGUMENTS
 
+## 0. Rythme : rester visible
+
+Pierre suit la session en direct. Une longue suite d'appels d'outils sans texte ressemble à un blocage.
+- Avant chaque phase (lecture, plan, simulation, rendu, UI, vérification, clôture), écris **une ligne** qui dit ce que tu fais.
+- Jamais plus de 3 ou 4 appels d'outils d'affilée sans une ligne d'avancement.
+- Le **plan doit être affiché vite** : lis d'abord les critères d'acceptation, affiche le plan, puis lis le reste au fil de l'implémentation.
+- Après chaque commit, une ligne : ce qui est fait, ce qui vient.
+
 ## 1. Identifier le jalon
 
 - Lis `CLAUDE.md`, puis la section « Statut » de `README.md` et `docs/05-roadmap-poc.md`.
@@ -14,18 +22,22 @@ Tu enchaînes le prochain jalon du projet. Argument éventuel : $ARGUMENTS
   (même format que `05-roadmap-poc.md`), ajoute-le à `docs/05-roadmap-poc.md` ou dans un nouveau fichier de roadmap, et **arrête-toi** pour validation.
 - Vérifie que l'itération précédente est bien terminée (`npm run check` passe). Sinon, signale-le et arrête-toi.
 
-## 2. Se documenter
+## 2. Se documenter (ciblé)
 
-Relis uniquement ce qui sert ce jalon :
-- toujours : `docs/02-regles-du-jeu-poc.md` et `docs/03-architecture.md`
+Relis uniquement ce qui sert ce jalon, et seulement les sections utiles (pas les documents entiers d'un bloc) :
+- toujours : les sections de `docs/02-regles-du-jeu-poc.md` et `docs/03-architecture.md` qui concernent le jalon
 - si rendu, assets ou UI : `docs/04-direction-artistique.md`
 - si déploiement : `docs/07-deploiement.md`
 - dès qu'il y a du rendu ou de l'UI : `docs/09-verification-visuelle-et-accessibilite.md`
+- les décisions récentes de `docs/08-decisions.md` (elles priment sur les autres docs)
+
+Code : ne lis pas tout `src/` d'avance. Lis les fichiers que tu vas modifier au moment où tu les modifies.
 
 ## 3. Planifier
 
 Annonce en 8 points maximum : ce que tu vas faire, dans quel ordre, quels fichiers, quels tests.
-Ne demande validation que s'il y a un vrai choix bloquant ou une ambiguïté qui change le résultat ; sinon continue.
+Ne demande validation que s'il y a un vrai choix bloquant ou une ambiguïté qui change le résultat ; sinon **enchaîne
+directement sur l'implémentation** sans attendre de « go ».
 
 ## 4. Implémenter
 
@@ -35,6 +47,10 @@ Ne demande validation que s'il y a un vrai choix bloquant ou une ambiguïté qui
 - Petits commits au fil de l'eau (`feat(sim): …`, `feat(render): …`, `test: …`).
 
 ## 5. Vérifier
+
+Durées repères : `npm run check` ~5 s, `npm run test:e2e` ~1 min, `npm run shots` ~15 s. Donne un délai suffisant à l'outil
+(jusqu'à 10 min) ou lance en arrière-plan ; la commande `timeout` n'existe pas sur macOS. Si une commande dépasse nettement
+ces durées, arrête-la et dis-le plutôt que d'attendre en silence.
 
 - Lance `npm run check` et corrige jusqu'à ce que tout passe.
 - Passe les **critères d'acceptation** un par un. Pour chacun, indique : ✅ vérifié (comment) ou ❌ non atteint (pourquoi).
@@ -51,6 +67,7 @@ Si **tous** les critères sont atteints :
 - ajoute une entrée dans `docs/08-decisions.md` pour chaque décision structurante prise ;
 - note les dettes techniques dans `docs/06-roadmap-suite.md` si besoin ;
 - fais un dernier commit `docs: clôture itération N`.
+- **Ne pousse pas** : un push sur `main` redéploie le site public. Propose-le dans le compte rendu.
 
 Si certains critères ne sont pas atteints : ne coche rien, liste ce qui reste.
 
