@@ -48,6 +48,7 @@ function updateGauges(state: GameState, animal: Animal, report: HabitatReport): 
 
   if (animal.health <= 0) {
     animal.diedAt = state.tick;
+    state.stats.deathTicks.push(state.tick);
     animal.activity = 'dead';
     animal.path = [];
   }

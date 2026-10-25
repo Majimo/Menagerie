@@ -13,6 +13,7 @@ export function updateEnclosures(state: GameState): void {
   state.nextEnclosureId = detection.nextEnclosureId;
   world.enclosureOf = detection.enclosureOf;
   world.enclosuresDirty = false;
+  world.revision += 1;
   for (const animal of Object.values(state.animals)) {
     const enclosureId =
       world.enclosureOf[tileIndex(world, { x: Math.floor(animal.x), y: Math.floor(animal.y) })] ?? 0;

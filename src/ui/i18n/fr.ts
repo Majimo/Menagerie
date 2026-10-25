@@ -23,7 +23,8 @@ export const fr = {
   'tool.animal': 'Animaux',
   'tool.animal.help': 'Animaux : cliquer dans un enclos fermé pour acheter et placer l’animal choisi',
   'tool.object': 'Objets',
-  'tool.object.help': 'Objets : nourrisseur (dans un enclos) et décors qui enrichissent l’habitat',
+  'tool.object.help':
+    'Objets : nourrisseur (dans un enclos), décors qui enrichissent l’habitat, stand de snacks (au bord d’un chemin)',
   'tool.demolish': 'Démolir',
   'tool.demolish.help': 'Démolir : chemins, clôtures, eau et objets, la moitié du coût est remboursée',
 
@@ -33,6 +34,7 @@ export const fr = {
   'building.tree': 'Arbre',
   'building.rock': 'Rocher',
   'building.bamboo': 'Bambou',
+  'building.snack': 'Stand de snacks',
 
   'time.label': 'Temps',
   'time.clock': 'Jour {day}, {time}',
@@ -127,6 +129,7 @@ export const fr = {
   'building.rock.plural': 'des rochers',
   'building.bamboo.plural': 'du bambou',
   'building.feeder.plural': 'des nourrisseurs',
+  'building.snack.plural': 'des stands de snacks',
 
   'camera.label': 'Caméra',
   'camera.rotateLeft': 'Tourner la vue à gauche (A)',
@@ -155,6 +158,9 @@ export const fr = {
   'error.incompatibleSpecies':
     'Impossible : {species} ne peut pas vivre avec {other}. Carnivores et herbivores ont des enclos séparés.',
   'error.groupFull': 'Enclos complet pour {species} : {max} au plus par enclos.',
+  'error.notBesidePath': 'Le stand doit toucher un chemin pour que les visiteurs y accèdent.',
+  'error.insideEnclosure': 'Pas dans un enclos : les visiteurs n’y entrent pas.',
+  'error.invalidPrice': 'Le prix du billet va de 5 à 50.',
 
   'species.zebra': 'Zèbre',
   'species.giraffe': 'Girafe',

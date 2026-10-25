@@ -4,7 +4,7 @@ import type { BuildingKind } from '../../src/sim/data/buildings';
 import type { SpeciesId } from '../../src/sim/data/species';
 import type { PaintableBiome } from '../../src/sim/data/terrain';
 import { dispatchCommand, stepSimulation } from '../../src/sim/simulation';
-import type { Animal, GameState } from '../../src/sim/state';
+import { type Animal, createLedger, type GameState } from '../../src/sim/state';
 import type { Edge, TileCoord } from '../../src/sim/world/grid';
 
 // Utilitaires des tests de simulation.
@@ -72,4 +72,46 @@ export function buyAnimal(state: GameState, species: SpeciesId, tile: TileCoord)
 export function runDays(state: GameState, days: number): void {
   const ticks = Math.round(days * balance.time.ticksPerDay);
   for (let i = 0; i < ticks; i++) stepSimulation(state);
+}
+
+/** Pose un chemin sur chaque tuile du segment (horizontal ou vertical). */
+export function placePath(state: GameState, from: TileCoord, to: TileCoord): void {
+  const dx = Math.sign(to.x - from.x);
+  const dy = Math.sign(to.y - from.y);
+  for (let x = from.x, y = from.y; ; x += dx, y += dy) {
+    dispatchCommand(state, { type: 'PlacePath', tile: { x, y } });
+    if (x === to.x && y === to.y) return;
+  }
+}
+
+/**
+ * Petit zoo de référence pour les visiteurs : entrée et sortie reliées à une allée (y = 39) qui longe
+ * un enclos de savane bien équipé [17, 32] → [26, 38] avec 3 zèbres. L'argent est remis à 50 000.
+ */
+export function buildVisitorZoo(state: GameState): void {
+  buildEnclosure(state, [17, 32, 26, 38], {
+    biome: 'savanna',
+    water: [
+      { x: 17, y: 32 },
+      { x: 18, y: 32 },
+    ],
+    feeders: [{ x: 26, y: 38 }],
+    decor: [
+      { kind: 'tree', tile: { x: 19, y: 36 } },
+      { kind: 'tree', tile: { x: 24, y: 33 } },
+      { kind: 'rock', tile: { x: 21, y: 34 } },
+      { kind: 'rock', tile: { x: 25, y: 37 } },
+    ],
+  });
+  placePath(state, { x: 21, y: 46 }, { x: 21, y: 40 });
+  placePath(state, { x: 26, y: 46 }, { x: 26, y: 40 });
+  placePath(state, { x: 15, y: 39 }, { x: 28, y: 39 });
+  for (const tile of [
+    { x: 20, y: 35 },
+    { x: 22, y: 36 },
+    { x: 23, y: 34 },
+  ])
+    buyAnimal(state, 'zebra', tile);
+  state.money = 50_000;
+  state.stats.today = createLedger(state.stats.today.day);
 }

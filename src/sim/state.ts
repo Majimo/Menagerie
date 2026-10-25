@@ -2,12 +2,13 @@ import { balance } from './data/balance';
 import type { BuildingKind } from './data/buildings';
 import type { SpeciesId } from './data/species';
 import { tileCode } from './data/terrain';
+import type { VisitorKind } from './data/visitors';
 import { type TileCoord, tileIndex } from './world/grid';
 
 // État global de la simulation : de la donnée pure, sérialisable en JSON (règle d'architecture n° 4).
 // Il s'enrichit à chaque itération (animaux, visiteurs…).
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type EnclosureId = number;
 
@@ -58,6 +59,90 @@ export interface Animal {
   diedAt: number;
 }
 
+export type VisitorId = number;
+
+/** Machine à états des visiteurs (docs/02). `GONE` = retiré de l'état. */
+export type VisitorState =
+  | 'arriving'
+  | 'wandering'
+  | 'walkingToView'
+  | 'viewing'
+  | 'walkingToFood'
+  | 'eating'
+  | 'leaving';
+
+/** Avancement de la demande de trajet : le système `pathfinding` la traite avec un budget par tick. */
+export type PathStatus = 'none' | 'pending' | 'ready' | 'failed';
+
+/** Réaction visible au-dessus du visiteur pendant quelques ticks. */
+export type VisitorReaction = 'none' | 'joy' | 'sad';
+
+export interface Visitor {
+  id: VisitorId;
+  kind: VisitorKind;
+  /** Variante de couleur du modèle. */
+  variant: number;
+  /** Position continue en tuiles, comme les animaux, et position du tick précédent. */
+  x: number;
+  y: number;
+  prevX: number;
+  prevY: number;
+  heading: number;
+  state: VisitorState;
+  /** Ticks restants de l'observation ou du repas. */
+  stateTicks: number;
+  /** Tuile visée (zone d'observation, stand, sortie), -1 si aucune. */
+  goal: number;
+  pathStatus: PathStatus;
+  /** Tuiles restantes du trajet, la prochaine en tête. */
+  path: number[];
+  /** Enclos visé ou observé, 0 sinon. */
+  targetEnclosure: EnclosureId;
+  /** Jauges de 0 à 100 (faim : 100 = rassasié, comme les animaux). */
+  satisfaction: number;
+  hunger: number;
+  patience: number;
+  /** Enclos à voir avant de partir. */
+  viewsWanted: number;
+  /** Enclos déjà observés (un id par observation : sert à la lassitude). */
+  seen: EnclosureId[];
+  /** Ticks consécutifs sans trajet possible. */
+  blockedTicks: number;
+  reaction: VisitorReaction;
+  reactionTick: number;
+  /** Raison du départ, si le visiteur s'en va. */
+  leaveReason: VisitorLeaveReason | null;
+  arrivedAt: number;
+}
+
+export type VisitorLeaveReason = 'done' | 'impatient' | 'closing' | 'blocked';
+
+/** Recettes et dépenses d'une journée (le bilan). Dépenses en valeurs positives. */
+export interface DayLedger {
+  day: number;
+  tickets: number;
+  snacks: number;
+  /** Constructions nettes des remboursements de démolition. */
+  construction: number;
+  animalPurchases: number;
+  animalFood: number;
+  upkeep: number;
+  visitors: number;
+  /** Somme des satisfactions des visiteurs repartis et leur nombre. */
+  satisfactionSum: number;
+  departures: number;
+}
+
+export interface ZooStats {
+  /** Note du zoo, de 1 à 5 étoiles (décimale). */
+  rating: number;
+  today: DayLedger;
+  /** Bilans des derniers jours terminés, le plus récent en dernier. */
+  history: DayLedger[];
+  /** Ticks des morts d'animaux récentes (pénalité de note). */
+  deathTicks: number[];
+}
+
 export interface Building {
   id: BuildingId;
   kind: BuildingKind;
@@ -79,6 +164,8 @@ export interface World {
   enclosureOf: number[];
   /** Les clôtures ont changé depuis la dernière détection d'enclos. */
   enclosuresDirty: boolean;
+  /** Incrémenté à chaque changement de sol, de clôture ou d'objet : invalide les caches (réseau des visiteurs, trajets). */
+  revision: number;
 }
 
 export interface GameState {
@@ -88,6 +175,7 @@ export interface GameState {
   tick: number;
   rngState: number;
   money: number;
+  ticketPrice: number;
   world: World;
   enclosures: Record<EnclosureId, Enclosure>;
   nextEnclosureId: EnclosureId;
@@ -95,6 +183,9 @@ export interface GameState {
   nextAnimalId: AnimalId;
   buildings: Record<BuildingId, Building>;
   nextBuildingId: BuildingId;
+  visitors: Record<VisitorId, Visitor>;
+  nextVisitorId: VisitorId;
+  stats: ZooStats;
 }
 
 export function createInitialState(seed = 1): GameState {
@@ -104,6 +195,7 @@ export function createInitialState(seed = 1): GameState {
     tick: 0,
     rngState: seed >>> 0,
     money: balance.startingMoney,
+    ticketPrice: balance.economy.ticketPrice.default,
     world: createWorld(),
     enclosures: {},
     nextEnclosureId: 1,
@@ -111,6 +203,29 @@ export function createInitialState(seed = 1): GameState {
     nextAnimalId: 1,
     buildings: {},
     nextBuildingId: 1,
+    visitors: {},
+    nextVisitorId: 1,
+    stats: {
+      rating: 1 + 4 * balance.rating.weights.satisfaction * (balance.rating.defaultSatisfaction / 100),
+      today: createLedger(1),
+      history: [],
+      deathTicks: [],
+    },
+  };
+}
+
+export function createLedger(day: number): DayLedger {
+  return {
+    day,
+    tickets: 0,
+    snacks: 0,
+    construction: 0,
+    animalPurchases: 0,
+    animalFood: 0,
+    upkeep: 0,
+    visitors: 0,
+    satisfactionSum: 0,
+    departures: 0,
   };
 }
 
@@ -130,5 +245,6 @@ function createWorld(): World {
     exit: { ...exit },
     enclosureOf: new Array<number>(width * height).fill(0),
     enclosuresDirty: false,
+    revision: 0,
   };
 }

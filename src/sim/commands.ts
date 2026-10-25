@@ -3,7 +3,7 @@ import { BUILDINGS, type BuildingKind } from './data/buildings';
 import { canCohabit, SPECIES, type SpeciesId } from './data/species';
 import { type PaintableBiome, tileCode } from './data/terrain';
 import { createAnimal } from './entities/animals';
-import type { Building, GameState, World } from './state';
+import type { Building, DayLedger, GameState, World } from './state';
 import {
   type Edge,
   edgeInBounds,
@@ -13,6 +13,7 @@ import {
   type TileCoord,
   tileIndex,
 } from './world/grid';
+import { openNeighbours } from './world/paths';
 
 // Commandes du joueur : de la donnée, validée puis appliquée par la simulation (règle d'architecture n° 2).
 
@@ -24,7 +25,8 @@ export type Command =
   | { type: 'PaintBiome'; tile: TileCoord; biome: PaintableBiome }
   | { type: 'Demolish'; target: DemolishTarget }
   | { type: 'PlaceBuilding'; tile: TileCoord; kind: BuildingKind }
-  | { type: 'BuyAnimal'; tile: TileCoord; species: SpeciesId };
+  | { type: 'BuyAnimal'; tile: TileCoord; species: SpeciesId }
+  | { type: 'SetTicketPrice'; price: number };
 
 /** Raison d'un refus. L'UI l'affiche via la clé i18n `error.<raison>`. */
 export type CommandError =
@@ -40,7 +42,10 @@ export type CommandError =
   | 'tileOccupied'
   | 'tileIsWater'
   | 'incompatibleSpecies'
-  | 'groupFull';
+  | 'groupFull'
+  | 'notBesidePath'
+  | 'insideEnclosure'
+  | 'invalidPrice';
 
 /** Précisions pour le message : l'espèce refusée et celle qui la gêne. */
 export interface CommandErrorDetail {
@@ -103,6 +108,12 @@ export function validateCommand(state: Readonly<GameState>, command: Command): C
       return validatePlaceBuilding(state, command.tile, command.kind);
     case 'BuyAnimal':
       return validateBuyAnimal(state, command.tile, command.species);
+    case 'SetTicketPrice': {
+      const { min, max } = balance.economy.ticketPrice;
+      if (!Number.isInteger(command.price) || command.price < min || command.price > max)
+        return refused('invalidPrice');
+      return { ok: true, moneyDelta: 0 };
+    }
   }
 }
 
@@ -124,9 +135,27 @@ function validatePlaceBuilding(
   if (!inBounds(world, tile)) return refused('outOfBounds');
   const blocked = tileBlocked(state, tile);
   if (blocked) return refused(blocked);
-  if (BUILDINGS[kind].inEnclosure && world.enclosureOf[tileIndex(world, tile)] === 0)
-    return refused('notInEnclosure');
+  const inEnclosure = world.enclosureOf[tileIndex(world, tile)] !== 0;
+  switch (BUILDINGS[kind].placement) {
+    case 'inEnclosure':
+      if (!inEnclosure) return refused('notInEnclosure');
+      break;
+    case 'besidePath':
+      if (inEnclosure) return refused('insideEnclosure');
+      if (!besidePath(world, tile)) return refused('notBesidePath');
+      break;
+    case 'anywhere':
+      break;
+  }
   return spend(state, BUILDINGS[kind].cost);
+}
+
+/** Une tuile de chemin hors enclos touche-t-elle cette tuile (sans clôture entre les deux) ? */
+function besidePath(world: Readonly<World>, tile: TileCoord): boolean {
+  const index = tileIndex(world, tile);
+  return openNeighbours(world, index).some(
+    (n) => world.tiles[n] === tileCode('path') && world.enclosureOf[n] === 0,
+  );
 }
 
 function validateBuyAnimal(state: Readonly<GameState>, tile: TileCoord, species: SpeciesId): CommandResult {
@@ -175,6 +204,8 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
   if (!result.ok) return result;
   const { world } = state;
   state.money += result.moneyDelta;
+  recordSpending(state.stats.today, command, result.moneyDelta);
+  if (command.type !== 'BuyAnimal' && command.type !== 'SetTicketPrice') world.revision += 1;
   switch (command.type) {
     case 'PlacePath':
       world.tiles[tileIndex(world, command.tile)] = tileCode('path');
@@ -200,8 +231,17 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
     case 'BuyAnimal':
       createAnimal(state, command.species, command.tile);
       break;
+    case 'SetTicketPrice':
+      state.ticketPrice = command.price;
+      break;
   }
   return result;
+}
+
+/** Inscrit la dépense (ou le remboursement) d'une commande dans le bilan du jour. */
+function recordSpending(ledger: DayLedger, command: Command, moneyDelta: number): void {
+  if (command.type === 'BuyAnimal') ledger.animalPurchases -= moneyDelta;
+  else ledger.construction -= moneyDelta;
 }
 
 /** Démolit l'objet de la tuile s'il y en a un, sinon rend la tuile (chemin ou eau) à l'herbe. */

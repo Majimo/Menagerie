@@ -1,4 +1,4 @@
-// Création et helpers des entités. Visiteurs et bâtiments des visiteurs : itération 3.
+// Création et helpers des entités.
 
 export {
   type AnimalStatus,
@@ -7,3 +7,4 @@ export {
   type DeathCause,
   deathCause,
 } from './animals';
+export { activeReaction, createVisitor, type VisitorMood, visitorMood } from './visitors';

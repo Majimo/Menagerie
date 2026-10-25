@@ -77,4 +77,83 @@ export const balance = {
     overcrowdedMalus: 20,
     incompatibleMalus: 40,
   },
+  visitors: {
+    /** Arrivées de `openHour` à `lastArrivalHour` ; à `closeHour`, tout le monde se dirige vers la sortie. */
+    openHour: 8,
+    lastArrivalHour: 17,
+    closeHour: 19,
+    /** Visiteurs par jour pour un zoo de référence (3 étoiles, 4 espèces, billet au prix juste). */
+    basePerDay: 160,
+    /** Plafond de visiteurs présents en même temps. */
+    maxActive: 220,
+    /** Prix juste du billet : `fairPriceBase + fairPricePerStar × note`. */
+    fairPriceBase: 8,
+    fairPricePerStar: 6,
+    /** Sensibilité au prix : chaque tranche de 100 % au-dessus du prix juste retire `priceSensitivity`. */
+    priceSensitivity: 1.6,
+    /** Facteur prix : borné dans [min, max] (un billet bon marché attire un peu plus). */
+    priceFactorMin: 0.03,
+    priceFactorMax: 1.3,
+    /** Espèces visibles pour une diversité complète. */
+    diversityCap: 4,
+    startSatisfaction: 50,
+    startPatience: 100,
+    /** Faim de départ : [min, max) ; en dessous de `hungryBelow`, le visiteur cherche un snack. */
+    startHunger: [55, 100],
+    hungryBelow: 35,
+    /** Satisfaction perdue par tick quand il a faim sans stand de snacks accessible. */
+    hungryNoFoodLossPerTick: 0.03,
+    /** Patience perdue en plus par tick quand il n'y a rien à voir. */
+    nothingToSeeLossPerTick: 0.3,
+    /** Patience rendue à la fin d'une observation. */
+    viewPatienceGain: 25,
+    /** Durée d'une observation en ticks : [min, max) (8 à 20 s de jeu à ×1). */
+    viewTicks: [80, 200],
+    /** Satisfaction gagnée par tick d'observation pour un enclos idéal (bien-être 100, animaux visibles, intérêt 10). */
+    viewGainPerTick: 0.35,
+    /** Un animal est visible à cette distance (en tuiles) de la zone d'observation. */
+    visibleRadius: 4,
+    /** Satisfaction perdue par tick devant un enclos où un animal est mort ou très malheureux. */
+    sadViewLossPerTick: 0.1,
+    /** En dessous de ce bien-être moyen, la réaction est triste. */
+    sadWellbeingBelow: 35,
+    /** Durée d'affichage d'une réaction (éclat de joie, tristesse), en ticks. */
+    reactionTicks: 25,
+    /** Lassitude : intérêt multiplié par ce facteur pour chaque visite déjà faite du même enclos. */
+    boredomFactor: 0.25,
+    /** Portée de la distance dans le choix : poids × 1 / (1 + distance / distanceScale). */
+    distanceScale: 15,
+    eatTicks: 30,
+    /** Satisfaction perdue quand la patience est épuisée. */
+    impatientPenalty: 15,
+    /** Ticks sans trajet possible avant que le visiteur abandonne (il disparaît, mécontent). */
+    blockedGiveUpTicks: 300,
+  },
+  economy: {
+    /** Prix du billet : défaut et bornes. */
+    ticketPrice: { default: 20, min: 5, max: 50 },
+    snackPrice: 8,
+    /** Part du prix du snack qui revient au zoo. */
+    snackMargin: 0.6,
+    /** Entretien quotidien : part du coût de construction (chemins, clôtures, eau, objets). */
+    upkeepRatio: 0.01,
+  },
+  rating: {
+    /** Pondération de la note (somme = 1). */
+    weights: { wellbeing: 0.4, satisfaction: 0.4, diversity: 0.2 },
+    /** Satisfaction supposée quand aucun visiteur n'est encore reparti. */
+    defaultSatisfaction: 50,
+    /** Étoiles retirées par animal mort dans les `deathMemoryDays` derniers jours. */
+    deathPenalty: 0.4,
+    deathMemoryDays: 7,
+    historyDays: 7,
+    /** Recalcul de la note tous les N ticks. */
+    everyTicks: 10,
+  },
+  pathfinding: {
+    /** Recherches A* par tick au plus ; les suivantes attendent le tick suivant. */
+    searchesPerTick: 24,
+    /** Taille maximale du cache de trajets avant purge. */
+    cacheSize: 4000,
+  },
 } as const;

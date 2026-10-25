@@ -14,8 +14,12 @@ export interface SpeciesDef {
   minGroup: number;
   maxGroup: number;
   price: number;
-  /** Attractivité pour les visiteurs, 1 à 10 (itération 3). */
+  /** Attractivité pour les visiteurs, 1 à 10. */
   interest: number;
+  /** « Mignonnerie », 0 à 1 : compte surtout pour les enfants. */
+  cuteness: number;
+  /** Coût de la nourriture, par animal et par jour (dépense de fin de journée). */
+  foodCostPerDay: number;
   /** Points de faim et de soif perdus par jour de jeu. */
   foodPerDay: number;
   waterPerDay: number;
@@ -38,6 +42,8 @@ export const SPECIES = {
     maxGroup: 8,
     price: 3_000,
     interest: 5,
+    cuteness: 0.5,
+    foodCostPerDay: 40,
     foodPerDay: 60,
     waterPerDay: 70,
     likedDecor: ['tree', 'rock'],
@@ -54,6 +60,8 @@ export const SPECIES = {
     maxGroup: 6,
     price: 6_000,
     interest: 7,
+    cuteness: 0.7,
+    foodCostPerDay: 60,
     foodPerDay: 60,
     waterPerDay: 50,
     likedDecor: ['tree'],
@@ -70,6 +78,8 @@ export const SPECIES = {
     maxGroup: 4,
     price: 9_000,
     interest: 9,
+    cuteness: 0.4,
+    foodCostPerDay: 90,
     foodPerDay: 50,
     waterPerDay: 60,
     likedDecor: ['rock', 'tree'],
@@ -86,6 +96,8 @@ export const SPECIES = {
     maxGroup: 1,
     price: 12_000,
     interest: 10,
+    cuteness: 1,
+    foodCostPerDay: 120,
     foodPerDay: 70,
     waterPerDay: 50,
     likedDecor: ['bamboo'],
