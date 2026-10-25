@@ -1,11 +1,13 @@
 import type { GroundPoint } from '../render/picking';
 import { EMPTY_PREVIEW, type Preview } from '../render/views/previewView';
 import { type Command, type CommandResult, validateCommand } from '../sim/commands';
+import type { BuildingKind } from '../sim/data/buildings';
+import type { SpeciesId } from '../sim/data/species';
 import type { PaintableBiome } from '../sim/data/terrain';
 import type { GameState } from '../sim/state';
 import { inBounds } from '../sim/world/grid';
 import type { Refusal } from './i18n';
-import { type ToolId, targetsFor, tileUnder } from './toolTargets';
+import { type ToolId, type ToolOptions, targetsFor, tileUnder } from './toolTargets';
 
 // Outil actif, survol et glisser : calcule l'aperçu (valide / invalide) et envoie les commandes au relâchement.
 // L'UI ne modifie jamais l'état : elle passe par `dispatch`.
@@ -27,9 +29,13 @@ export interface Evaluation {
 export interface ToolController {
   readonly active: ToolId | null;
   readonly biome: PaintableBiome;
+  readonly species: SpeciesId;
+  readonly building: BuildingKind;
   readonly dragging: boolean;
   select(tool: ToolId | null): void;
   setBiome(biome: PaintableBiome): void;
+  setSpecies(species: SpeciesId): void;
+  setBuilding(building: BuildingKind): void;
   hover(point: GroundPoint | null): void;
   pressStart(point: GroundPoint): void;
   pressMove(point: GroundPoint): void;
@@ -49,7 +55,7 @@ export function createToolController(
   dispatch: (command: Command) => CommandResult,
 ): ToolController {
   let active: ToolId | null = null;
-  let biome: PaintableBiome = 'savanna';
+  const options: ToolOptions = { biome: 'savanna', species: 'zebra', building: 'feeder' };
   let start: GroundPoint | null = null;
   let pointer: GroundPoint | null = null;
   const listeners: (() => void)[] = [];
@@ -62,7 +68,7 @@ export function createToolController(
     // Validation en séquence avec l'argent restant : au-delà du budget, la suite de l'aperçu passe en invalide.
     const scratch = { ...state, money: state.money };
     let moneyDelta = 0;
-    const commands = targetsFor(active, biome, state, start, pointer).map((command) => {
+    const commands = targetsFor(active, options, state, start, pointer).map((command) => {
       const result = validateCommand(scratch, command);
       if (result.ok) {
         scratch.money += result.moneyDelta;
@@ -78,7 +84,13 @@ export function createToolController(
       return active;
     },
     get biome() {
-      return biome;
+      return options.biome;
+    },
+    get species() {
+      return options.species;
+    },
+    get building() {
+      return options.building;
     },
     get dragging() {
       return start !== null;
@@ -92,7 +104,15 @@ export function createToolController(
       changed();
     },
     setBiome(value) {
-      biome = value;
+      options.biome = value;
+      changed();
+    },
+    setSpecies(value) {
+      options.species = value;
+      changed();
+    },
+    setBuilding(value) {
+      options.building = value;
       changed();
     },
     hover(point) {
@@ -110,7 +130,7 @@ export function createToolController(
       pointer = point;
       const outcome: ToolOutcome = { applied: 0, refused: 0, error: null, moneyDelta: 0 };
       // Cibles calculées avant d'envoyer la première commande : `dispatch` fait évoluer l'état.
-      for (const command of targetsFor(active, biome, getState(), start, point)) {
+      for (const command of targetsFor(active, options, getState(), start, point)) {
         const result = dispatch(command);
         if (result.ok) {
           outcome.applied += 1;
@@ -147,7 +167,12 @@ export function createToolController(
           preview.edges.push({ at: command.target.edge, valid });
         else if (command.type === 'Demolish' && command.target.kind === 'tile')
           preview.tiles.push({ at: command.target.tile, valid });
-        else if (command.type === 'PlacePath' || command.type === 'PaintBiome')
+        else if (
+          command.type === 'PlacePath' ||
+          command.type === 'PaintBiome' ||
+          command.type === 'BuyAnimal' ||
+          command.type === 'PlaceBuilding'
+        )
           preview.tiles.push({ at: command.tile, valid });
       }
       return preview;

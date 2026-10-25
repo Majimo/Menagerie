@@ -3,7 +3,8 @@
 const TOAST_MS = 3500;
 
 export interface Toast {
-  show(text: string): void;
+  /** `error` : refus d'une action ; `info` : événement de la partie. */
+  show(text: string, tone?: 'error' | 'info'): void;
 }
 
 export function createToast(parent: HTMLElement): Toast {
@@ -15,8 +16,9 @@ export function createToast(parent: HTMLElement): Toast {
   parent.append(el);
   let timer = 0;
   return {
-    show(text) {
+    show(text, tone = 'error') {
       el.textContent = text;
+      el.dataset.tone = tone;
       el.classList.add('visible');
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {

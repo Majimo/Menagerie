@@ -2,11 +2,12 @@ import './style.css';
 import { attachInput } from './input';
 import { createRenderer } from './render/renderer';
 import type { Session } from './session';
-import { createClock, ticksDue } from './sim/clock';
+import { createClock, tickFraction, ticksDue } from './sim/clock';
 import { dispatchCommand, stepSimulation } from './sim/simulation';
 import { createInitialState } from './sim/state';
 import { createGameUi, setupShell } from './ui';
 import { createDebugOverlay } from './ui/debugOverlay';
+import { createGameSpeed, SPEEDS } from './ui/timeControls';
 import { createToolController } from './ui/tools';
 
 // Point d'entrée : assemble simulation, rendu, UI et entrées.
@@ -24,7 +25,8 @@ const tools = createToolController(
   () => session.state,
   (command) => dispatchCommand(session.state, command),
 );
-const ui = createGameUi({ root: uiRoot, tools, renderer, reducedMotion });
+const speed = createGameSpeed();
+const ui = createGameUi({ root: uiRoot, tools, renderer, speed, reducedMotion });
 const debugOverlay = new URLSearchParams(window.location.search).has('debug')
   ? createDebugOverlay(document.body)
   : null;
@@ -49,13 +51,24 @@ attachInput(canvas, {
   pan: (dx, dy) => renderer.camera.panPixels(dx, dy),
   zoom: (factor) => renderer.camera.zoomBy(factor),
   rotate: (steps) => renderer.camera.rotate(steps),
-  cancel: () => tools.cancel(),
+  cancel: () => {
+    if (tools.active) tools.cancel();
+    else ui.inspector.select(null);
+  },
+  tap: (point) => {
+    const ground = renderer.pick(point.x, point.y);
+    if (ground) ui.inspector.pickAt(session.state, ground);
+  },
+  togglePause: () => speed.togglePause(),
+  setSpeed: (rank) => {
+    const value = SPEEDS[rank];
+    if (value) speed.setSpeed(value);
+  },
 });
 
 const clock = createClock();
-/** Vitesse de jeu : pause et ×2 / ×4 arrivent à l'itération 2. */
-const speed = 1;
-let paused = false;
+/** Les tests avancent la simulation eux-mêmes (API de debug) : le temps réel ne la fait plus bouger. */
+let realTimeSuspended = false;
 let lastFrame = -1;
 
 let signalFirstFrame: () => void = () => {};
@@ -66,10 +79,15 @@ const firstFrame = new Promise<void>((resolve) => {
 function frame(now: number): void {
   const delta = lastFrame < 0 ? 0 : now - lastFrame;
   lastFrame = now;
-  const due = ticksDue(clock, delta, paused ? 0 : speed);
+  const due = ticksDue(clock, delta, realTimeSuspended ? 0 : speed.factor);
   for (let i = 0; i < due; i++) stepSimulation(session.state);
-  renderer.render(session.state, tools.preview(session.state), now);
-  ui.update(session.state);
+  renderer.render(session.state, {
+    preview: tools.preview(session.state),
+    now,
+    alpha: tickFraction(clock),
+    selectedAnimal: ui.inspector.selectedAnimal,
+  });
+  ui.update(session.state, now);
   debugOverlay?.frame(now, session.state.tick);
   signalFirstFrame();
   requestAnimationFrame(frame);
@@ -84,8 +102,9 @@ if (import.meta.env.DEV) {
       tools,
       firstFrame,
       // Les tests avancent la simulation eux-mêmes : le temps réel ne doit plus la faire bouger.
+      inspector: ui.inspector,
       pauseRealTime: () => {
-        paused = true;
+        realTimeSuspended = true;
       },
     }),
   );

@@ -1,12 +1,13 @@
-import { scenarios } from '../../tests/e2e/scenarios';
+import { runScenario, scenarios } from '../../tests/e2e/scenarios';
 import type { CameraPreset } from '../render/camera';
 import type { GameRenderer } from '../render/renderer';
 import type { Session } from '../session';
 import type { Command, CommandResult } from '../sim/commands';
 import type { PaintableBiome } from '../sim/data/terrain';
 import { dispatchCommand, stepSimulation } from '../sim/simulation';
-import { createInitialState, type GameState } from '../sim/state';
+import type { GameState } from '../sim/state';
 import type { TileCoord } from '../sim/world/grid';
+import type { Inspector, Selection } from '../ui/inspector';
 import type { ToolController } from '../ui/tools';
 import type { ToolId } from '../ui/toolTargets';
 
@@ -30,6 +31,10 @@ export interface GameApi {
    * ou coins nord-ouest pour la clôture (elle relie des coins).
    */
   previewTool(tool: ToolId, from: TileCoord, to: TileCoord, biome?: PaintableBiome): void;
+  /** Ouvre le panneau d'inspection (null : le ferme). */
+  inspect(selection: Selection | null): void;
+  /** Test de silhouette : animaux en noir sur fond blanc. */
+  silhouette(on: boolean): void;
 }
 
 declare global {
@@ -42,13 +47,21 @@ interface GameApiDeps {
   session: Session;
   renderer: GameRenderer;
   tools: ToolController;
+  inspector: Inspector;
   firstFrame: Promise<void>;
   pauseRealTime(): void;
 }
 
 const center = (tile: TileCoord) => ({ x: tile.x + 0.5, z: tile.y + 0.5 });
 
-export function installGameApi({ session, renderer, tools, firstFrame, pauseRealTime }: GameApiDeps): void {
+export function installGameApi({
+  session,
+  renderer,
+  tools,
+  inspector,
+  firstFrame,
+  pauseRealTime,
+}: GameApiDeps): void {
   let focus: TileCoord | undefined;
   window.__game = {
     ready: () => firstFrame,
@@ -57,9 +70,8 @@ export function installGameApi({ session, renderer, tools, firstFrame, pauseReal
       if (!scenario) throw new Error(`Scénario inconnu : ${name}`);
       pauseRealTime();
       tools.select(null);
-      session.state = createInitialState(scenario.seed);
-      for (const command of scenario.commands) dispatchCommand(session.state, command);
-      for (let i = 0; i < scenario.ticks; i++) stepSimulation(session.state);
+      inspector.select(null);
+      session.state = runScenario(scenario);
       focus = 'focus' in scenario ? scenario.focus : undefined;
     },
     advance(ticks) {
@@ -80,5 +92,7 @@ export function installGameApi({ session, renderer, tools, firstFrame, pauseReal
       tools.pressStart(point(from));
       tools.pressMove(point(to));
     },
+    inspect: (selection) => inspector.select(selection),
+    silhouette: (on) => renderer.setSilhouette(on),
   };
 }

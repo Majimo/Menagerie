@@ -47,3 +47,12 @@ export function animalStatus(animal: Readonly<Animal>): AnimalStatus {
   if (animal.activity === 'sleep') return 'sleeping';
   return 'content';
 }
+
+export type DeathCause = 'hunger' | 'thirst' | 'wellbeing';
+
+/** Jauge à 0 qui a causé la privation (la faim d'abord). */
+export function deathCause(animal: Readonly<Animal>): DeathCause {
+  if (animal.hunger <= 0) return 'hunger';
+  if (animal.thirst <= 0) return 'thirst';
+  return 'wellbeing';
+}

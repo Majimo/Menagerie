@@ -1,5 +1,7 @@
 import type { GroundPoint } from '../render/picking';
 import type { Command } from '../sim/commands';
+import type { BuildingKind } from '../sim/data/buildings';
+import type { SpeciesId } from '../sim/data/species';
 import { type PaintableBiome, tileCode } from '../sim/data/terrain';
 import type { GameState } from '../sim/state';
 import { type Edge, sameTile, type TileCoord } from '../sim/world/grid';
@@ -8,10 +10,18 @@ import { type Edge, sameTile, type TileCoord } from '../sim/world/grid';
 // - Chemin : ligne droite selon l'axe dominant. Biome : rectangle de tuiles.
 // - Clôture : arête la plus proche, ou contour du rectangle entre deux coins de tuiles (un trait si aligné).
 // - Démolir : clôture proche du pointeur ou tuile ; en glissant, les chemins et clôtures du rectangle.
+// - Animal, objet : la tuile sous le pointeur (un seul achat par geste).
 
-export type ToolId = 'path' | 'fence' | 'biome' | 'demolish';
+export type ToolId = 'path' | 'fence' | 'biome' | 'animal' | 'object' | 'demolish';
 
-export const TOOLS: readonly ToolId[] = ['path', 'fence', 'biome', 'demolish'];
+export const TOOLS: readonly ToolId[] = ['path', 'fence', 'biome', 'animal', 'object', 'demolish'];
+
+/** Variante choisie pour les outils qui en ont une (biome, espèce, objet). */
+export interface ToolOptions {
+  biome: PaintableBiome;
+  species: SpeciesId;
+  building: BuildingKind;
+}
 
 /** Distance (en tuiles) en deçà de laquelle « Démolir » vise la clôture plutôt que la tuile. */
 const FENCE_GRAB = 0.22;
@@ -49,7 +59,7 @@ function hasFence(state: Readonly<GameState>, edge: Edge): boolean {
 
 export function targetsFor(
   tool: ToolId,
-  biome: PaintableBiome,
+  { biome, species, building }: ToolOptions,
   state: Readonly<GameState>,
   start: GroundPoint | null,
   current: GroundPoint,
@@ -72,6 +82,10 @@ export function targetsFor(
       return fenceTargets(state, start, current).map((edge) => ({ type: 'PlaceFence', edge }));
     case 'demolish':
       return demolishTargets(state, start, current);
+    case 'animal':
+      return [{ type: 'BuyAnimal', tile: end, species }];
+    case 'object':
+      return [{ type: 'PlaceBuilding', tile: end, kind: building }];
   }
 }
 

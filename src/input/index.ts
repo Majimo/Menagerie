@@ -1,9 +1,11 @@
 // Traduction souris / tactile / clavier en intentions. Le reste du code ne connaît pas le périphérique.
 //
-// - Souris : clic gauche = construire si un outil est actif, sinon déplacer la vue ; clic droit ou milieu = déplacer ;
-//   molette = zoom.
-// - Tactile : un doigt = construire (outil actif) ou déplacer ; deux doigts = déplacer et zoomer (pincement).
-// - Clavier : flèches / ZQSD = déplacer, + / − = zoom, A / E = rotation, Échap = annuler.
+// - Souris : clic gauche = construire si un outil est actif, sinon déplacer la vue (un clic sans glisser = inspecter) ;
+//   clic droit ou milieu = déplacer ; molette = zoom.
+// - Tactile : un doigt = construire (outil actif) ou déplacer (un appui bref = inspecter) ; deux doigts = déplacer et
+//   zoomer (pincement).
+// - Clavier : flèches / ZQSD = déplacer, + / − = zoom, A / E = rotation, Échap = annuler, espace = pause,
+//   1 / 2 / 3 = vitesse ×1 / ×2 / ×4.
 
 export interface ScreenPoint {
   x: number;
@@ -22,17 +24,26 @@ export interface Intents {
   zoom(factor: number): void;
   rotate(steps: number): void;
   cancel(): void;
+  /** Appui bref sans glisser, sans outil actif : inspecter ce qui est sous le pointeur. */
+  tap(point: ScreenPoint): void;
+  togglePause(): void;
+  /** Vitesse par rang : 0 = ×1, 1 = ×2, 2 = ×4. */
+  setSpeed(rank: number): void;
 }
 
 const KEY_PAN_PX = 40;
 const WHEEL_ZOOM = 1.0015;
 const KEY_ZOOM = 1.25;
+/** Déplacement maximal (px) pour qu'un appui compte comme un clic plutôt qu'un glisser. */
+const TAP_SLOP_PX = 6;
 
 export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
   const pointers = new Map<number, ScreenPoint>();
   let pressing: number | null = null;
   let panning = false;
   let pinchDistance = 0;
+  /** Appui candidat au clic d'inspection : point de départ, invalidé dès qu'il glisse ou qu'un 2e doigt arrive. */
+  let tapStart: { id: number; point: ScreenPoint } | null = null;
 
   const at = (event: PointerEvent): ScreenPoint => ({ x: event.clientX, y: event.clientY });
 
@@ -45,6 +56,7 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
       // Deuxième doigt : on abandonne la construction en cours, on passe en déplacement + pincement.
       if (pressing !== null) intents.pressCancel();
       pressing = null;
+      tapStart = null;
       panning = true;
       pinchDistance = spread();
       return;
@@ -55,6 +67,7 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
       intents.pressStart(at(event));
     } else {
       panning = true;
+      if (event.button === 0) tapStart = { id: event.pointerId, point: at(event) };
     }
   });
 
@@ -66,6 +79,11 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
       return;
     }
     pointers.set(event.pointerId, point);
+    if (tapStart?.id === event.pointerId) {
+      if (Math.hypot(point.x - tapStart.point.x, point.y - tapStart.point.y) > TAP_SLOP_PX) tapStart = null;
+      // Tant que l'appui peut encore être un clic, la vue ne bouge pas.
+      else return;
+    }
     if (pressing === event.pointerId) {
       intents.pressMove(point);
     } else if (panning) {
@@ -87,6 +105,10 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
       if (cancelled) intents.pressCancel();
       else intents.pressEnd(at(event));
       pressing = null;
+    }
+    if (tapStart?.id === event.pointerId) {
+      if (!cancelled) intents.tap(at(event));
+      tapStart = null;
     }
     if (pointers.size === 0) panning = false;
     if (pointers.size < 2) pinchDistance = 0;
@@ -124,9 +146,20 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
       '-': () => intents.zoom(KEY_ZOOM),
       a: () => intents.rotate(-1),
       e: () => intents.rotate(1),
+      ' ': () => intents.togglePause(),
+      '1': () => intents.setSpeed(0),
+      '2': () => intents.setSpeed(1),
+      '3': () => intents.setSpeed(2),
     };
     const action = actions[key];
     if (!action) return;
+    // L'espace active le bouton qui a le focus : on ne le détourne pas.
+    if (
+      key === ' ' &&
+      event.target instanceof HTMLElement &&
+      event.target.closest('button, input, select, textarea')
+    )
+      return;
     // Les flèches restent aux contrôles de l'interface qui en ont besoin (groupes de boutons radio).
     if (
       key.startsWith('arrow') &&
