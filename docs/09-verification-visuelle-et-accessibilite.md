@@ -41,7 +41,7 @@ Ils sont introduits au fil des itérations :
 | `empty-map` | carte vierge, entrée et sortie | 1 |
 | `first-enclosure` | un enclos fermé, chemin, aperçus valides et invalides | 1 |
 | `four-species` | un enclos par espèce, animaux en bonne santé | 2 |
-| `animal-needs` | animaux affamés, assoiffés, malades, endormis (nuit) | 2 |
+| `animal-needs` | un animal par état : mort, malade, assoiffé, affamé, malheureux, content (le sommeil : capture de nuit de `four-species`) | 2 |
 | `busy-day` | ~150 visiteurs répartis, bulles d'humeur | 3 |
 | `crisis` | argent négatif, animal mort, visiteurs en colère | 3 à 4 |
 | `tutorial-start` | écran d'accueil et première aide contextuelle | 4 |

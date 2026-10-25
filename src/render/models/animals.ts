@@ -257,18 +257,18 @@ export function createLion(): Object3D {
       coloredBox([0.04, 0.55, 0.04], [0, -0.27, 0], coat),
       coloredBox([0.09, 0.13, 0.09], [0, -0.57, 0], mane),
     ],
-    height: 1.05,
+    height: 1.15,
   });
 }
 
 /** Panda : corps rond et trapu, blanc à pattes et épaules noires, tête ronde, oreilles et yeux noirs. */
 export function createPanda(): Object3D {
   const white = 0xf2f0ea;
-  const legLength = 0.24;
+  const legLength = 0.3;
   const bodyY = legLength + 0.17;
   return assemble({
     legLength,
-    legThickness: 0.16,
+    legThickness: 0.17,
     legColor: BLACK,
     hoofColor: BLACK,
     hips: [
@@ -287,8 +287,8 @@ export function createPanda(): Object3D {
     neck: [
       sphere(0.24, [1, 0.95, 1.05], [0.1, 0.06, 0], white, 8),
       // Grandes oreilles rondes bien détachées : c'est elles qui font la silhouette.
-      sphere(0.1, [0.8, 1, 1], [0.04, 0.29, -0.17], BLACK, 6),
-      sphere(0.1, [0.8, 1, 1], [0.04, 0.29, 0.17], BLACK, 6),
+      sphere(0.11, [0.8, 1, 1], [0.03, 0.31, -0.18], BLACK, 6),
+      sphere(0.11, [0.8, 1, 1], [0.03, 0.31, 0.18], BLACK, 6),
       coloredBox([0.06, 0.1, 0.08], [0.3, 0.1, -0.09], BLACK),
       coloredBox([0.06, 0.1, 0.08], [0.3, 0.1, 0.09], BLACK),
       coloredBox([0.12, 0.1, 0.12], [0.32, 0.0, 0], white),
@@ -297,6 +297,6 @@ export function createPanda(): Object3D {
     tailAt: [-0.4, bodyY + 0.06, 0],
     tailRest: -0.6,
     tail: [coloredBox([0.08, 0.08, 0.08], [0, -0.03, 0], white)],
-    height: 1.05,
+    height: 1.15,
   });
 }

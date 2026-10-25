@@ -140,6 +140,52 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
 - **Conséquences** : 9 maillages de chunks + 1 `InstancedMesh` de clôtures + calques d'aperçu instanciés ; marge confortable.
   Mesure mobile à faire.
 
+## ADR-019 : Règles des animaux au POC
+- **Statut** : accepté (itération 2) ; précise `02-regles-du-jeu-poc.md`
+- **Décision** :
+  - Le score d'habitat est une fonction pure (`sim/world/habitat.ts`) calculée à la demande, une fois par tick et par couple
+    (enclos, espèce) ; le panneau d'inspection appelle la même fonction. Pas de score stocké dans l'état.
+  - « Une jauge à 0 pendant 2 jours » compte la faim, la soif **et** le bien-être ; le compteur repart de zéro dès qu'aucune
+    jauge n'est à 0, et la santé remonte alors lentement. État affiché « malade » dès que la santé est sous 100.
+  - Priorité de l'état affiché : mort, malade, soif, faim, mal-être, sommeil, content.
+  - Les animaux dorment de 21 h à 6 h (la nuit visuelle va de 20 h à 7 h) : un sommeil de 20 h à 8 h laissait les enclos
+    endormis la moitié du temps.
+  - Taille de groupe : au-delà de `maxGroup` (lion 4, panda 1), l'achat est refusé ; une fusion d'enclos peut dépasser,
+    avec un malus de bien-être. Un animal mort reste visible 400 ticks (corps gris couché, pierre tombale) puis disparaît.
+  - Le point d'eau est un sol `water` peint dans un enclos (30 par tuile) ; « Démolir » enlève aussi l'eau et les objets.
+- **Conséquences** : un animal sans nourrisseur meurt en 4 à 5 jours (8 à 10 min à ×1). À équilibrer à l'itération 4.
+
+## ADR-020 : Déplacement des animaux
+- **Statut** : accepté (itération 2)
+- **Décision** : position continue (en tuiles) + position du tick précédent pour l'interpolation. Trajets par parcours en
+  largeur sur les tuiles praticables de l'enclos (ni eau, ni objet, sans traverser de clôture), donc corrects dans un enclos
+  en L. Promenade : une tuile tirée au PRNG à 4 tuiles au plus ; soif et faim priment (tuile voisine de l'eau ou du
+  nourrisseur). Pas de collision entre animaux.
+- **Conséquences** : déterministe et simple ; coût négligeable pour quelques dizaines d'animaux (voir dettes).
+
+## ADR-021 : Vitesse de jeu hors de l'état de simulation
+- **Statut** : accepté (itération 2) ; remplace la commande `SetSpeed` listée dans `03-architecture.md`
+- **Décision** : pause, ×1, ×2, ×4 vivent dans la boucle principale (`ui/timeControls.ts`) et multiplient le temps réel
+  donné à l'accumulateur. Ce n'est pas une commande : la vitesse ne change rien au résultat d'une partie.
+- **Conséquences** : une partie reste égale à (seed, liste de (tick, commande)). La sauvegarde (itération 4) n'aura pas
+  à stocker la vitesse ; elle reprendra en ×1.
+
+## ADR-022 : Icônes maison partagées, inspection et test de silhouette
+- **Statut** : accepté (itération 2)
+- **Décision** : les icônes d'état et d'espèce sont dessinées sur canvas (`render/icons.ts`) : sprites dans la scène,
+  images dans les panneaux. Chaque état combine une forme (disque, goutte, carré, losange, nuage, pierre tombale), un
+  pictogramme et une couleur. Inspection : clic ou appui bref sans outil actif (animal le plus proche à moins de 0,7 tuile,
+  sinon enclos), et liste des enclos accessible au clavier. Le renderer a un mode silhouette (animaux en noir sur fond
+  blanc), piloté par l'API de debug, pour le test de lisibilité de `04-direction-artistique.md`.
+- **Conséquences** : pas d'asset externe ni d'emoji système ; les captures de silhouette sont reproductibles.
+
+## ADR-023 : Scénarios à étapes et vérifiés par Vitest
+- **Statut** : accepté (itération 2) ; complète ADR-013
+- **Décision** : un scénario peut fixer l'argent de départ et enchaîner des étapes (commandes puis ticks), pour échelonner
+  des achats et montrer plusieurs états au même instant. `runScenario` est partagé par l'API de debug et par un test
+  Vitest qui vérifie que chaque scénario montre bien ce pour quoi il existe (états attendus, jour ou nuit).
+- **Conséquences** : un rééquilibrage qui casse une capture de référence échoue dès `npm run check`.
+
 ---
 
 ## Journal des playtests

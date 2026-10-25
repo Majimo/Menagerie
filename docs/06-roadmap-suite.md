@@ -105,6 +105,15 @@ Déclencheurs (voir tableau plus bas) :
 - Aperçu de démolition « en rectangle » limité aux chemins et clôtures : les biomes ne se démolissent pas (on repeint).
 - Performance mesurée sur un seul poste (Apple M3 Pro, 60 fps) : mesurer sur mobile milieu de gamme.
 - Sable et chemin ont des couleurs proches ; le relief du chemin les distingue, à revoir si les retours de jeu le signalent.
+- Animaux (itération 2) : pas de collision entre animaux, trajets recalculés à chaque promenade (parcours en largeur dans
+  l'enclos, ~2 000 tuiles au plus) ; prévoir un cache de distances par enclos si le nombre d'animaux grimpe.
+- Animations procédurales simples (pattes en balancier, cou qui s'abaisse) : à remplacer par des modèles glTF animés.
+- Le score d'habitat est recalculé à chaque tick pour chaque couple (enclos, espèce) : à mettre en cache par enclos
+  si le profilage le montre.
+- Une clôture démolie laisse l'animal « hors enclos » sur place (immobile, bien-être cible 0) : pas d'évasion au POC.
+- Le nourrisseur est gratuit à l'usage : son coût de nourriture journalier arrive avec l'économie (itération 3).
+- Le panneau d'inspection se reconstruit (4 fois par seconde au plus) quand son contenu change : suffisant au POC,
+  à revoir avec un petit framework d'UI.
 
 ## Questions ouvertes
 

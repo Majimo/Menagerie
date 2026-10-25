@@ -72,12 +72,12 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 - Cycle jour/nuit, pause et vitesses ×1/×2/×4.
 
 **Critères d'acceptation**
-- [ ] Les 4 espèces sont **reconnaissables à la silhouette** (test de silhouette de `04-direction-artistique.md`).
-- [ ] Un enclos trop petit ou sans eau fait baisser le bien-être ; le panneau dit pourquoi.
-- [ ] Un animal sans nourriture finit par tomber malade puis mourir, de façon visible.
-- [ ] Un lion ne peut pas être placé avec des zèbres, message explicite.
-- [ ] Tests : score d'habitat, évolution des besoins, mort par privation, règles de cohabitation.
-- [ ] Revue visuelle : scénarios `four-species` et `animal-needs` capturés ; test de silhouette réussi pour les 4 espèces ; états visibles sans panneau ; vérification sous les 4 simulations de daltonisme ; navigation clavier des panneaux.
+- [x] Les 4 espèces sont **reconnaissables à la silhouette** (test de silhouette de `04-direction-artistique.md`).
+- [x] Un enclos trop petit ou sans eau fait baisser le bien-être ; le panneau dit pourquoi.
+- [x] Un animal sans nourriture finit par tomber malade puis mourir, de façon visible.
+- [x] Un lion ne peut pas être placé avec des zèbres, message explicite.
+- [x] Tests : score d'habitat, évolution des besoins, mort par privation, règles de cohabitation.
+- [x] Revue visuelle : scénarios `four-species` et `animal-needs` capturés ; test de silhouette réussi pour les 4 espèces ; états visibles sans panneau ; vérification sous les 4 simulations de daltonisme ; navigation clavier des panneaux.
 
 **Prompt** : « Réalise l'itération 2. Les modèles sont procéduraux pour l'instant, avec le repli du registre d'assets. »
 

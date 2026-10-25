@@ -613,7 +613,7 @@ button:focus-visible {
   .tool-button {
     min-width: 52px;
     padding: 4px 2px;
-    font-size: 0.72em;
+    font-size: 0.75em;
   }
   .picker {
     bottom: calc(max(12px, env(safe-area-inset-bottom)) + 76px);
