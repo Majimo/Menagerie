@@ -4,8 +4,14 @@ export const TILE_TYPES = ['grass', 'savanna', 'forest', 'sand', 'water', 'path'
 
 export type TileType = (typeof TILE_TYPES)[number];
 
-/** Biomes que le joueur peut peindre (l'eau arrive avec les points d'eau, itération 2). */
-export const PAINTABLE_BIOMES = ['savanna', 'forest', 'grass', 'sand'] as const satisfies readonly TileType[];
+/** Sols que le joueur peut peindre. L'eau (point d'eau) se pose seulement dans un enclos. */
+export const PAINTABLE_BIOMES = [
+  'savanna',
+  'forest',
+  'grass',
+  'sand',
+  'water',
+] as const satisfies readonly TileType[];
 
 export type PaintableBiome = (typeof PAINTABLE_BIOMES)[number];
 

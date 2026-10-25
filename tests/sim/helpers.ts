@@ -1,7 +1,11 @@
 import type { Command } from '../../src/sim/commands';
-import { dispatchCommand } from '../../src/sim/simulation';
-import type { GameState } from '../../src/sim/state';
-import type { Edge } from '../../src/sim/world/grid';
+import { balance } from '../../src/sim/data/balance';
+import type { BuildingKind } from '../../src/sim/data/buildings';
+import type { SpeciesId } from '../../src/sim/data/species';
+import type { PaintableBiome } from '../../src/sim/data/terrain';
+import { dispatchCommand, stepSimulation } from '../../src/sim/simulation';
+import type { Animal, GameState } from '../../src/sim/state';
+import type { Edge, TileCoord } from '../../src/sim/world/grid';
 
 // Utilitaires des tests de simulation.
 
@@ -26,4 +30,46 @@ export function placeFences(state: GameState, edges: Edge[]): void {
 
 export function dispatchAll(state: GameState, commands: Command[]): void {
   for (const command of commands) dispatchCommand(state, command);
+}
+
+export interface EnclosureSetup {
+  biome?: PaintableBiome;
+  /** Tuiles d'eau, de nourrisseur et de décor. */
+  water?: TileCoord[];
+  feeders?: TileCoord[];
+  decor?: { kind: BuildingKind; tile: TileCoord }[];
+}
+
+/** Clôture le rectangle [x0, x1] × [y0, y1], le peint et l'équipe. Donne assez d'argent pour tout payer. */
+export function buildEnclosure(
+  state: GameState,
+  [x0, y0, x1, y1]: [number, number, number, number],
+  setup: EnclosureSetup = {},
+): void {
+  state.money = 10_000_000;
+  placeFences(state, rectangleOutline(x0, y0, x1, y1));
+  const commands: Command[] = [];
+  if (setup.biome) {
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++)
+        commands.push({ type: 'PaintBiome', tile: { x, y }, biome: setup.biome });
+  }
+  for (const tile of setup.water ?? []) commands.push({ type: 'PaintBiome', tile, biome: 'water' });
+  for (const tile of setup.feeders ?? []) commands.push({ type: 'PlaceBuilding', tile, kind: 'feeder' });
+  for (const { kind, tile } of setup.decor ?? []) commands.push({ type: 'PlaceBuilding', tile, kind });
+  for (const command of commands) {
+    const result = dispatchCommand(state, command);
+    if (!result.ok) throw new Error(`Commande refusée ${JSON.stringify(command)} : ${result.error}`);
+  }
+}
+
+export function buyAnimal(state: GameState, species: SpeciesId, tile: TileCoord): Animal {
+  const result = dispatchCommand(state, { type: 'BuyAnimal', species, tile });
+  if (!result.ok) throw new Error(`Achat refusé : ${result.error}`);
+  return state.animals[state.nextAnimalId - 1] as Animal;
+}
+
+export function runDays(state: GameState, days: number): void {
+  const ticks = Math.round(days * balance.time.ticksPerDay);
+  for (let i = 0; i < ticks; i++) stepSimulation(state);
 }

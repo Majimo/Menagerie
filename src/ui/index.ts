@@ -2,7 +2,7 @@ import type { GameRenderer } from '../render/renderer';
 import type { GameState } from '../sim/state';
 import { createToast, createTooltip, type TooltipLine } from './feedback';
 import { createCameraControls, createMoneyDisplay } from './hud';
-import { errorKey, formatMoney, t } from './i18n';
+import { errorText, formatMoney, t } from './i18n';
 import { createToolbar } from './toolbar';
 import type { ToolController, ToolOutcome } from './tools';
 import { tileUnder } from './toolTargets';
@@ -54,7 +54,7 @@ export function createGameUi({ root, tools, renderer, reducedMotion }: GameUiDep
     },
     report(outcome) {
       if (!outcome.error) return;
-      const reason = t(errorKey(outcome.error));
+      const reason = errorText(outcome.error);
       const total = outcome.applied + outcome.refused;
       toast.show(
         outcome.applied === 0 ? reason : t('outcome.partial', { refused: outcome.refused, total, reason }),
@@ -89,6 +89,6 @@ function tooltipLines(state: Readonly<GameState>, tools: ToolController): Toolti
     });
   }
   const refused = evaluation.commands.find(({ result }) => !result.ok)?.result;
-  if (refused && !refused.ok) lines.push({ text: t(errorKey(refused.error)), tone: 'error' });
+  if (refused && !refused.ok) lines.push({ text: errorText(refused), tone: 'error' });
   return lines;
 }

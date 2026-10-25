@@ -1,6 +1,9 @@
 import { balance } from './data/balance';
+import { BUILDINGS, type BuildingKind } from './data/buildings';
+import { canCohabit, SPECIES, type SpeciesId } from './data/species';
 import { type PaintableBiome, tileCode } from './data/terrain';
-import type { GameState, World } from './state';
+import { createAnimal } from './entities/animals';
+import type { Building, GameState, World } from './state';
 import {
   type Edge,
   edgeInBounds,
@@ -19,7 +22,9 @@ export type Command =
   | { type: 'PlacePath'; tile: TileCoord }
   | { type: 'PlaceFence'; edge: Edge }
   | { type: 'PaintBiome'; tile: TileCoord; biome: PaintableBiome }
-  | { type: 'Demolish'; target: DemolishTarget };
+  | { type: 'Demolish'; target: DemolishTarget }
+  | { type: 'PlaceBuilding'; tile: TileCoord; kind: BuildingKind }
+  | { type: 'BuyAnimal'; tile: TileCoord; species: SpeciesId };
 
 /** Raison d'un refus. L'UI l'affiche via la clé i18n `error.<raison>`. */
 export type CommandError =
@@ -30,13 +35,26 @@ export type CommandError =
   | 'alreadyBiome'
   | 'protectedTile'
   | 'tileIsPath'
-  | 'nothingToDemolish';
+  | 'nothingToDemolish'
+  | 'notInEnclosure'
+  | 'tileOccupied'
+  | 'tileIsWater'
+  | 'incompatibleSpecies'
+  | 'groupFull';
+
+/** Précisions pour le message : l'espèce refusée et celle qui la gêne. */
+export interface CommandErrorDetail {
+  species: SpeciesId;
+  other: SpeciesId;
+}
 
 /** Résultat d'une commande : `moneyDelta` est négatif pour une dépense, positif pour un remboursement. */
-export type CommandResult = { ok: true; moneyDelta: number } | { ok: false; error: CommandError };
+export type CommandResult =
+  | { ok: true; moneyDelta: number }
+  | { ok: false; error: CommandError; detail?: CommandErrorDetail };
 
-function refused(error: CommandError): CommandResult {
-  return { ok: false, error };
+function refused(error: CommandError, detail?: CommandErrorDetail): CommandResult {
+  return detail ? { ok: false, error, detail } : { ok: false, error };
 }
 
 function spend(state: GameState, cost: number): CommandResult {
@@ -47,6 +65,11 @@ function isProtected(world: World, tile: TileCoord): boolean {
   return sameTile(tile, world.entrance) || sameTile(tile, world.exit);
 }
 
+/** Objet posé sur la tuile, s'il y en a un. */
+export function buildingAt(state: Readonly<GameState>, tile: TileCoord): Building | undefined {
+  return Object.values(state.buildings).find((b) => sameTile(b.tile, tile));
+}
+
 /** Valide une commande sans modifier l'état (sert aussi à l'aperçu de placement). */
 export function validateCommand(state: Readonly<GameState>, command: Command): CommandResult {
   const { world } = state;
@@ -54,6 +77,7 @@ export function validateCommand(state: Readonly<GameState>, command: Command): C
     case 'PlacePath': {
       if (!inBounds(world, command.tile)) return refused('outOfBounds');
       if (world.tiles[tileIndex(world, command.tile)] === tileCode('path')) return refused('alreadyPath');
+      if (buildingAt(state, command.tile)) return refused('tileOccupied');
       return spend(state, balance.costs.path);
     }
     case 'PlaceFence': {
@@ -68,14 +92,63 @@ export function validateCommand(state: Readonly<GameState>, command: Command): C
       if (current === tileCode('path'))
         return refused(isProtected(world, command.tile) ? 'protectedTile' : 'tileIsPath');
       if (current === tileCode(command.biome)) return refused('alreadyBiome');
-      return spend(state, balance.costs.biome);
+      if (command.biome !== 'water') return spend(state, balance.costs.biome);
+      if (world.enclosureOf[tileIndex(world, command.tile)] === 0) return refused('notInEnclosure');
+      if (buildingAt(state, command.tile)) return refused('tileOccupied');
+      return spend(state, balance.costs.water);
     }
     case 'Demolish':
-      return validateDemolish(world, command.target);
+      return validateDemolish(state, command.target);
+    case 'PlaceBuilding':
+      return validatePlaceBuilding(state, command.tile, command.kind);
+    case 'BuyAnimal':
+      return validateBuyAnimal(state, command.tile, command.species);
   }
 }
 
-function validateDemolish(world: World, target: DemolishTarget): CommandResult {
+/** Raison commune d'un refus de poser quelque chose sur une tuile : chemin, eau ou objet déjà là. */
+function tileBlocked(state: Readonly<GameState>, tile: TileCoord): CommandError | null {
+  const code = state.world.tiles[tileIndex(state.world, tile)];
+  if (code === tileCode('path')) return 'tileIsPath';
+  if (code === tileCode('water')) return 'tileIsWater';
+  if (buildingAt(state, tile)) return 'tileOccupied';
+  return null;
+}
+
+function validatePlaceBuilding(
+  state: Readonly<GameState>,
+  tile: TileCoord,
+  kind: BuildingKind,
+): CommandResult {
+  const { world } = state;
+  if (!inBounds(world, tile)) return refused('outOfBounds');
+  const blocked = tileBlocked(state, tile);
+  if (blocked) return refused(blocked);
+  if (BUILDINGS[kind].inEnclosure && world.enclosureOf[tileIndex(world, tile)] === 0)
+    return refused('notInEnclosure');
+  return spend(state, BUILDINGS[kind].cost);
+}
+
+function validateBuyAnimal(state: Readonly<GameState>, tile: TileCoord, species: SpeciesId): CommandResult {
+  const { world } = state;
+  if (!inBounds(world, tile)) return refused('outOfBounds');
+  const enclosureId = world.enclosureOf[tileIndex(world, tile)];
+  if (!enclosureId) return refused('notInEnclosure');
+  const blocked = tileBlocked(state, tile);
+  if (blocked) return refused(blocked);
+  let sameSpecies = 0;
+  for (const animal of Object.values(state.animals)) {
+    if (animal.enclosureId !== enclosureId || animal.diedAt >= 0) continue;
+    if (!canCohabit(species, animal.species))
+      return refused('incompatibleSpecies', { species, other: animal.species });
+    if (animal.species === species) sameSpecies++;
+  }
+  if (sameSpecies >= SPECIES[species].maxGroup) return refused('groupFull', { species, other: species });
+  return spend(state, SPECIES[species].price);
+}
+
+function validateDemolish(state: Readonly<GameState>, target: DemolishTarget): CommandResult {
+  const { world } = state;
   const refund = (cost: number): CommandResult => ({
     ok: true,
     moneyDelta: Math.floor(cost * balance.demolishRefundRatio),
@@ -88,8 +161,12 @@ function validateDemolish(world: World, target: DemolishTarget): CommandResult {
   }
   if (!inBounds(world, target.tile)) return refused('outOfBounds');
   if (isProtected(world, target.tile)) return refused('protectedTile');
-  if (world.tiles[tileIndex(world, target.tile)] !== tileCode('path')) return refused('nothingToDemolish');
-  return refund(balance.costs.path);
+  const building = buildingAt(state, target.tile);
+  if (building) return refund(BUILDINGS[building.kind].cost);
+  const code = world.tiles[tileIndex(world, target.tile)];
+  if (code === tileCode('path')) return refund(balance.costs.path);
+  if (code === tileCode('water')) return refund(balance.costs.water);
+  return refused('nothingToDemolish');
 }
 
 /** Valide puis applique une commande. L'état n'est modifié que si elle est acceptée. */
@@ -110,10 +187,28 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       break;
     case 'Demolish':
       if (command.target.kind === 'fence') setFence(world, command.target.edge, 0);
-      else world.tiles[tileIndex(world, command.target.tile)] = tileCode('grass');
+      else demolishTile(state, command.target.tile);
+      break;
+    case 'PlaceBuilding':
+      state.buildings[state.nextBuildingId] = {
+        id: state.nextBuildingId,
+        kind: command.kind,
+        tile: { ...command.tile },
+      };
+      state.nextBuildingId += 1;
+      break;
+    case 'BuyAnimal':
+      createAnimal(state, command.species, command.tile);
       break;
   }
   return result;
+}
+
+/** Démolit l'objet de la tuile s'il y en a un, sinon rend la tuile (chemin ou eau) à l'herbe. */
+function demolishTile(state: GameState, tile: TileCoord): void {
+  const building = buildingAt(state, tile);
+  if (building) delete state.buildings[building.id];
+  else state.world.tiles[tileIndex(state.world, tile)] = tileCode('grass');
 }
 
 function fencesOf(world: Readonly<World>, edge: Edge): readonly number[] {

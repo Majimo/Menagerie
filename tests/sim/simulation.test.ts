@@ -42,3 +42,31 @@ describe('simulation', () => {
     expect(play(123)).toEqual(play(123));
   });
 });
+
+describe('simulation avec animaux', () => {
+  function zoo(seed: number): ReturnType<typeof createInitialState> {
+    const state = createInitialState(seed);
+    state.money = 1_000_000;
+    const commands: Command[] = [
+      ...rectangleOutline(5, 5, 14, 14).map((edge) => ({ type: 'PlaceFence' as const, edge })),
+      { type: 'PaintBiome', tile: { x: 5, y: 5 }, biome: 'water' },
+      { type: 'PlaceBuilding', tile: { x: 14, y: 14 }, kind: 'feeder' },
+      { type: 'BuyAnimal', tile: { x: 8, y: 8 }, species: 'zebra' },
+      { type: 'BuyAnimal', tile: { x: 9, y: 8 }, species: 'zebra' },
+      { type: 'BuyAnimal', tile: { x: 10, y: 10 }, species: 'giraffe' },
+    ];
+    for (const command of commands) dispatchCommand(state, command);
+    for (let i = 0; i < 2500; i++) stepSimulation(state);
+    return state;
+  }
+
+  it('déterminisme avec des animaux qui errent', () => {
+    expect(zoo(7)).toEqual(zoo(7));
+    expect(zoo(7)).not.toEqual(zoo(8));
+  });
+
+  it("l'état avec animaux et objets reste sérialisable", () => {
+    const state = zoo(3);
+    expect(JSON.parse(JSON.stringify(state))).toEqual(state);
+  });
+});

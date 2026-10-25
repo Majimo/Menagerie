@@ -1,3 +1,3 @@
-// Création et helpers des entités (animaux, visiteurs, bâtiments) : itérations 2 et 3.
+// Création et helpers des entités. Visiteurs et bâtiments des visiteurs : itération 3.
 
-export {};
+export { type AnimalStatus, animalStatus, createAnimal } from './animals';

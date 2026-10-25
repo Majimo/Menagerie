@@ -1,9 +1,10 @@
 import type { GroundPoint } from '../render/picking';
 import { EMPTY_PREVIEW, type Preview } from '../render/views/previewView';
-import { type Command, type CommandError, type CommandResult, validateCommand } from '../sim/commands';
+import { type Command, type CommandResult, validateCommand } from '../sim/commands';
 import type { PaintableBiome } from '../sim/data/terrain';
 import type { GameState } from '../sim/state';
 import { inBounds } from '../sim/world/grid';
+import type { Refusal } from './i18n';
 import { type ToolId, targetsFor, tileUnder } from './toolTargets';
 
 // Outil actif, survol et glisser : calcule l'aperçu (valide / invalide) et envoie les commandes au relâchement.
@@ -13,7 +14,7 @@ export interface ToolOutcome {
   applied: number;
   refused: number;
   /** Raison du premier refus. */
-  error: CommandError | null;
+  error: Refusal | null;
   moneyDelta: number;
 }
 
@@ -116,7 +117,7 @@ export function createToolController(
           outcome.moneyDelta += result.moneyDelta;
         } else {
           outcome.refused += 1;
-          outcome.error ??= result.error;
+          outcome.error ??= result;
         }
       }
       start = null;

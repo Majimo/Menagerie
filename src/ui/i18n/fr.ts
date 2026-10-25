@@ -28,6 +28,7 @@ export const fr = {
   'biome.forest': 'Forêt',
   'biome.grass': 'Herbe',
   'biome.sand': 'Sable',
+  'biome.water': 'Eau',
 
   'camera.label': 'Caméra',
   'camera.rotateLeft': 'Tourner la vue à gauche (A)',
@@ -50,6 +51,26 @@ export const fr = {
   'error.protectedTile': 'L’entrée et la sortie du zoo ne se modifient pas.',
   'error.tileIsPath': 'On ne peint pas un chemin : démolissez-le d’abord.',
   'error.nothingToDemolish': 'Rien à démolir ici.',
+  'error.notInEnclosure': 'Il faut un enclos fermé : placez-le à l’intérieur des clôtures.',
+  'error.tileOccupied': 'Il y a déjà un objet sur cette tuile.',
+  'error.tileIsWater': 'Impossible sur l’eau.',
+  'error.incompatibleSpecies':
+    'Impossible : {species} ne peut pas vivre avec {other}. Carnivores et herbivores ont des enclos séparés.',
+  'error.groupFull': 'Enclos complet pour {species} : {max} au plus par enclos.',
+
+  'species.zebra': 'Zèbre',
+  'species.giraffe': 'Girafe',
+  'species.lion': 'Lion',
+  'species.panda': 'Panda',
+  // Avec article, pour les phrases : « le lion », « les zèbres ».
+  'species.zebra.the': 'le zèbre',
+  'species.giraffe.the': 'la girafe',
+  'species.lion.the': 'le lion',
+  'species.panda.the': 'le panda',
+  'species.zebra.plural': 'les zèbres',
+  'species.giraffe.plural': 'les girafes',
+  'species.lion.plural': 'les lions',
+  'species.panda.plural': 'les pandas',
 } as const;
 
 export type TextKey = keyof typeof fr;
