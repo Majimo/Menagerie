@@ -2,7 +2,8 @@ import { balance } from '../data/balance';
 import { VISITOR_KINDS, type VisitorKind } from '../data/visitors';
 import { nextFloat, nextInt } from '../rng';
 import type { GameState, Visitor } from '../state';
-import { tileAt } from '../world/grid';
+import { tileAt, tileIndex } from '../world/grid';
+import { visitorNetwork } from '../world/visitorNetwork';
 
 // Création des visiteurs et humeur affichée.
 
@@ -49,9 +50,17 @@ export function activeReaction(visitor: Readonly<Visitor>, tick: number): Visito
   return tick - visitor.reactionTick < balance.visitors.reactionTicks ? visitor.reaction : 'none';
 }
 
-export function visitorMood(visitor: Readonly<Visitor>, tick: number): VisitorMood {
+/** Le visiteur ne peut plus rejoindre la sortie : aucun trajet, ou chemin coupé entre lui et la sortie. */
+export function isVisitorBlocked(state: Readonly<GameState>, visitor: Readonly<Visitor>): boolean {
+  if (visitor.blockedTicks > 0) return true;
+  const tile = tileIndex(state.world, { x: Math.floor(visitor.x), y: Math.floor(visitor.y) });
+  return !visitorNetwork(state).exitSide.has(tile);
+}
+
+/** `blocked` : résultat de `isVisitorBlocked`, calculé par l'appelant (il dépend du réseau de chemins). */
+export function visitorMood(visitor: Readonly<Visitor>, tick: number, blocked: boolean): VisitorMood {
   const v = balance.visitors;
-  if (visitor.blockedTicks > 0) return 'blocked';
+  if (blocked) return 'blocked';
   if (visitor.hunger < v.hungryBelow && visitor.state !== 'eating') return 'hungry';
   const reaction = activeReaction(visitor, tick);
   if (reaction !== 'none') return reaction;

@@ -13,6 +13,9 @@ export interface ZooStatus {
 export function createZooStatus(onOpen: () => void): ZooStatus {
   const rating = h('span', { className: 'status-value', attrs: { 'data-testid': 'rating' } });
   const visitors = h('span', { className: 'status-value', attrs: { 'data-testid': 'visitor-count' } });
+  // Nom accessible = texte du bouton (le visible y figure tel quel) : « Économie : note 4,0 sur 5, 157 visiteurs ».
+  const hidden = (key: 'hud.economy.lead' | 'hud.economy.middle' | 'hud.economy.tail') =>
+    h('span', { className: 'visually-hidden', text: t(key) });
   const el = h(
     'button',
     {
@@ -20,7 +23,15 @@ export function createZooStatus(onOpen: () => void): ZooStatus {
       attrs: { 'data-testid': 'economy-button', title: t('hud.economy.help') },
       onClick: onOpen,
     },
-    [icon('star'), rating, icon('person'), visitors],
+    [
+      hidden('hud.economy.lead'),
+      icon('star'),
+      rating,
+      hidden('hud.economy.middle'),
+      icon('person'),
+      visitors,
+      hidden('hud.economy.tail'),
+    ],
   );
   let shown = '';
   return {
@@ -33,7 +44,6 @@ export function createZooStatus(onOpen: () => void): ZooStatus {
       shown = key;
       rating.textContent = text;
       visitors.textContent = String(count);
-      el.setAttribute('aria-label', t('hud.economy', { rating: text, count }));
     },
   };
 }

@@ -1,6 +1,6 @@
 import { moodIcon } from '../../render/icons';
 import { balance } from '../../sim/data/balance';
-import { visitorMood } from '../../sim/entities';
+import { isVisitorBlocked, visitorMood } from '../../sim/entities';
 import type { GameState, Visitor } from '../../sim/state';
 import { canvasImage, h } from '../dom';
 import { t } from '../i18n';
@@ -15,7 +15,7 @@ export function visitorPanel(
   nav: PanelNavigation,
 ): PanelContent {
   const v = balance.visitors;
-  const mood = visitorMood(visitor, state.tick);
+  const mood = visitorMood(visitor, state.tick, isVisitorBlocked(state, visitor));
   const target = visitor.targetEnclosure;
   return {
     title: t('panel.visitorTitle', { kind: t(`visitor.${visitor.kind}`), id: visitor.id }),

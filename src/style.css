@@ -642,7 +642,8 @@ button:focus-visible {
     left: 12px;
     right: 12px;
     width: auto;
-    max-height: calc(100vh - 260px);
+    /* S'arrête au-dessus des commandes de caméra. */
+    max-height: calc(100vh - 330px);
   }
 }
 
@@ -802,12 +803,14 @@ button:focus-visible {
 @media (max-width: 600px) {
   .alerts {
     top: 116px;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
   .alert-chip {
     font-size: 0.8em;
   }
-  body:has(.alerts li) .inspector {
-    top: 168px;
-    max-height: calc(100vh - 308px);
+  /* Écran étroit : un panneau ouvert remplace le bandeau d'alertes (on l'ouvre souvent depuis une alerte). */
+  body:has(.inspector:not([hidden])) .alerts {
+    display: none;
   }
 }

@@ -24,7 +24,7 @@ export const VISITOR_KINDS = {
   adult: {
     share: 0.65,
     ticketRatio: 1,
-    walkSpeed: 0.1,
+    walkSpeed: 0.2,
     patienceLossPerTick: 0.12,
     hungerLossPerTick: 0.07,
     cutenessWeight: 0.3,
@@ -35,7 +35,7 @@ export const VISITOR_KINDS = {
   child: {
     share: 0.35,
     ticketRatio: 0.5,
-    walkSpeed: 0.09,
+    walkSpeed: 0.18,
     patienceLossPerTick: 0.2,
     hungerLossPerTick: 0.11,
     cutenessWeight: 1,

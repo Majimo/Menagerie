@@ -31,7 +31,12 @@ export function economyPanel(state: Readonly<GameState>, nav: PanelNavigation): 
         className: 'price-button',
         text: step < 0 ? `−${-step}` : `+${step}`,
         attrs: { 'aria-label': label, title: label, 'data-focus-id': `price${step}` },
-        onClick: () => nav.dispatch({ type: 'SetTicketPrice', price: next }),
+        // Prix relu au clic : deux clics rapides avant le rafraîchissement du panneau s'additionnent.
+        onClick: () =>
+          nav.dispatch({
+            type: 'SetTicketPrice',
+            price: Math.min(max, Math.max(min, state.ticketPrice + step)),
+          }),
       });
       if (next === price) button.setAttribute('disabled', '');
       return button;

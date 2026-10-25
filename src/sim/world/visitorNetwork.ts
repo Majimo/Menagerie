@@ -15,6 +15,8 @@ export interface VisitorNetwork {
   exit: number;
   /** La sortie est atteignable depuis l'entrée. */
   exitReachable: boolean;
+  /** Tuiles de chemin d'où l'on peut rejoindre la sortie (sortie comprise). */
+  exitSide: Set<number>;
   /** Zones d'observation atteignables de chaque enclos : tuiles de chemin qui le longent. */
   viewSpots: Map<EnclosureId, number[]>;
   /** Pour chaque zone d'observation, la tuile d'enclos qu'elle regarde (orientation du visiteur). */
@@ -41,6 +43,20 @@ function adjacentTiles(world: Readonly<World>, index: number): number[] {
   return result;
 }
 
+/** Tuiles de chemin reliées à `start` (parcours en largeur, sans traverser de clôture). */
+function connectedTiles(world: Readonly<World>, start: number): Set<number> {
+  const tiles = new Set<number>([start]);
+  const queue = [start];
+  for (let head = 0; head < queue.length; head++) {
+    for (const next of openNeighbours(world, queue[head] as number)) {
+      if (tiles.has(next) || !isVisitorWalkable(world, next)) continue;
+      tiles.add(next);
+      queue.push(next);
+    }
+  }
+  return tiles;
+}
+
 const cache = new WeakMap<Readonly<GameState>, VisitorNetwork>();
 
 export function visitorNetwork(state: Readonly<GameState>): VisitorNetwork {
@@ -55,15 +71,7 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
   const { world } = state;
   const entrance = tileIndex(world, world.entrance);
   const exit = tileIndex(world, world.exit);
-  const reachable = new Set<number>([entrance]);
-  const queue = [entrance];
-  for (let head = 0; head < queue.length; head++) {
-    for (const next of openNeighbours(world, queue[head] as number)) {
-      if (reachable.has(next) || !isVisitorWalkable(world, next)) continue;
-      reachable.add(next);
-      queue.push(next);
-    }
-  }
+  const reachable = connectedTiles(world, entrance);
 
   const viewSpots = new Map<EnclosureId, number[]>();
   const viewFacing = new Map<number, number>();
@@ -91,6 +99,7 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
     entrance,
     exit,
     exitReachable: reachable.has(exit),
+    exitSide: connectedTiles(world, exit),
     viewSpots,
     viewFacing,
     snackSpots,

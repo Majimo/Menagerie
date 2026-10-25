@@ -7,4 +7,10 @@ export {
   type DeathCause,
   deathCause,
 } from './animals';
-export { activeReaction, createVisitor, type VisitorMood, visitorMood } from './visitors';
+export {
+  activeReaction,
+  createVisitor,
+  isVisitorBlocked,
+  type VisitorMood,
+  visitorMood,
+} from './visitors';

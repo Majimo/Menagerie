@@ -87,6 +87,8 @@ interface Smooth {
 export interface VisitorFrame {
   visitors: Readonly<Record<VisitorId, Visitor>>;
   tick: number;
+  /** Le visiteur ne peut plus rejoindre la sortie (bulle « bloqué »). */
+  isBlocked: (visitor: Readonly<Visitor>) => boolean;
   alpha: number;
   now: number;
   deltaMs: number;
@@ -251,7 +253,7 @@ export function createVisitorView(): VisitorView {
             ring.visible = true;
             ring.position.set(x, PATH_TOP + 0.01, z);
           }
-          const mood = shownMood(visitor, frame.tick, far);
+          const mood = shownMood(visitor, frame.tick, far, frame.isBlocked(visitor));
           if (mood) {
             const bubble = sprite(bubbles, bubbleCount++, 12);
             const material = materialFor(mood);
@@ -291,8 +293,13 @@ export function createVisitorView(): VisitorView {
 }
 
 /** Bulle à afficher : problèmes et réactions toujours, « amusé » seulement devant un enclos et de près. */
-function shownMood(visitor: Readonly<Visitor>, tick: number, far: boolean): ShownMood | null {
-  const mood = visitorMood(visitor, tick);
+function shownMood(
+  visitor: Readonly<Visitor>,
+  tick: number,
+  far: boolean,
+  blocked: boolean,
+): ShownMood | null {
+  const mood = visitorMood(visitor, tick, blocked);
   if (mood === 'neutral') return null;
   if (mood === 'happy') return !far && visitor.state === 'viewing' ? 'happy' : null;
   return mood;

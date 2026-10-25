@@ -11,6 +11,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three';
+import { isVisitorBlocked } from '../sim/entities';
 import type { AnimalId, GameState, VisitorId, World } from '../sim/state';
 import { timeOfDay } from '../sim/time';
 import { type CameraPreset, createIsoCamera, type IsoCamera } from './camera';
@@ -140,6 +141,7 @@ export function createRenderer(
       visitors.update({
         visitors: state.visitors,
         tick: state.tick,
+        isBlocked: (visitor) => isVisitorBlocked(state, visitor),
         alpha: frozen ? 1 : frame.alpha,
         now,
         deltaMs: delta,

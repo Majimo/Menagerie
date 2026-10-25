@@ -13,16 +13,24 @@ export const fr = {
 
   'money.label': 'Argent',
 
-  'hud.economy': 'Économie : note {rating} sur 5, {count} visiteurs dans le zoo',
+  // Bouton Économie, lu d'un trait : « Économie : note 4,0 sur 5, 157 visiteurs dans le zoo ».
+  'hud.economy.lead': 'Économie : note ',
+  'hud.economy.middle': ' sur 5, ',
+  'hud.economy.tail': ' visiteurs dans le zoo',
   'hud.economy.help': 'Note du zoo, prix du billet et bilan de la journée',
 
   'alerts.label': 'Problèmes du zoo',
-  'alert.blocked': '{count} visiteur(s) bloqué(s) : un chemin est coupé',
+  'alert.blocked': '{count} visiteur(s) bloqué(s)',
+  'alert.blocked.help': 'Un chemin a été coupé : ils ne peuvent plus rejoindre la sortie.',
   'alert.moneyNegative': 'Argent négatif : {amount}',
-  'alert.deficit': 'Bilan du jour {day} en déficit : {amount}',
-  'alert.unreachable': 'Enclos n° {id} sans chemin : les visiteurs ne le voient pas',
-  'alert.exitUnreachable': 'Sortie non reliée à l’entrée : aucun visiteur ne vient',
-  'alert.hungry': '{count} visiteur(s) affamé(s) : posez un stand de snacks',
+  'alert.deficit': 'Déficit du jour {day} : {amount}',
+  'alert.money.help': 'Les dépenses dépassent les recettes : voir le bilan.',
+  'alert.unreachable': 'Enclos n° {id} sans chemin',
+  'alert.unreachable.help': 'Aucun chemin relié à l’entrée ne le longe : les visiteurs ne le voient pas.',
+  'alert.exitUnreachable': 'Sortie coupée de l’entrée',
+  'alert.exitUnreachable.help': 'Reliez la sortie à l’entrée par un chemin, sinon aucun visiteur ne vient.',
+  'alert.hungry': '{count} visiteur(s) affamé(s)',
+  'alert.hungry.help': 'Posez un stand de snacks au bord d’un chemin.',
 
   'economy.title': 'Économie du zoo',
   'economy.rating': 'Note du zoo : {rating} / 5',

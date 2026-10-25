@@ -1,4 +1,5 @@
 import { balance } from './data/balance';
+import { isVisitorBlocked } from './entities/visitors';
 import type { EnclosureId, GameState } from './state';
 import { ledgerNet } from './systems/economy';
 import { visitorNetwork } from './world/visitorNetwork';
@@ -10,7 +11,7 @@ export interface ZooAlerts {
   unreachableEnclosures: EnclosureId[];
   /** Des animaux sont visibles mais la sortie n'est pas reliée à l'entrée : personne ne vient. */
   exitUnreachable: boolean;
-  /** Visiteurs sans trajet possible. */
+  /** Visiteurs qui ne peuvent plus rejoindre la sortie. */
   blockedVisitors: number;
   /** Visiteurs affamés sans stand de snacks accessible. */
   hungryWithoutFood: number;
@@ -30,7 +31,7 @@ export function zooAlerts(state: Readonly<GameState>): ZooAlerts {
   let blockedVisitors = 0;
   let hungryWithoutFood = 0;
   for (const visitor of Object.values(state.visitors)) {
-    if (visitor.blockedTicks > 0) blockedVisitors++;
+    if (isVisitorBlocked(state, visitor)) blockedVisitors++;
     if (network.snackSpots.length === 0 && visitor.hunger < balance.visitors.hungryBelow) hungryWithoutFood++;
   }
   const yesterday = state.stats.history[state.stats.history.length - 1];
