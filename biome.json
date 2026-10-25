@@ -1,0 +1,51 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!**/*.md", "!**/dist", "!**/artifacts", "!**/test-results", "!**/playwright-report"]
+  },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 110 },
+  "javascript": { "formatter": { "quoteStyle": "single" } },
+  "linter": {
+    "enabled": true,
+    "rules": { "preset": "recommended" }
+  },
+  "overrides": [
+    {
+      "includes": ["src/sim/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "three": "src/sim/ est du TypeScript pur : pas de three (règle d'architecture n° 1)."
+                },
+                "patterns": [
+                  {
+                    "group": ["three/**", "**/render/**", "**/ui/**", "**/input/**"],
+                    "message": "src/sim/ ne dépend ni du rendu, ni de l'UI, ni des entrées (règle d'architecture n° 1)."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "window": "Pas de DOM dans src/sim/ (règle d'architecture n° 1).",
+                  "document": "Pas de DOM dans src/sim/ (règle d'architecture n° 1).",
+                  "navigator": "Pas de DOM dans src/sim/ (règle d'architecture n° 1).",
+                  "localStorage": "Pas de DOM dans src/sim/ : la persistance passe par src/persistence/.",
+                  "requestAnimationFrame": "Pas de DOM dans src/sim/ : le temps vient du compteur de ticks.",
+                  "performance": "Pas d'horloge réelle dans src/sim/ : utiliser le compteur de ticks (règle n° 3)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

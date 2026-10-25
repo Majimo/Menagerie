@@ -1,0 +1,8 @@
+{
+  // Outillage (configs, tests) : exécuté par Node, ou par Playwright qui évalue du code dans la page (d'où la lib DOM).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
+}

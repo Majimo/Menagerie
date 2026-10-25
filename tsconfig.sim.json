@@ -1,0 +1,10 @@
+{
+  // Garde d'architecture : src/sim/ compile sans la lib DOM ni les types de Vite/Node.
+  // Toute référence à window, document, etc. y devient une erreur de typage.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/sim"]
+}
