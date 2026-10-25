@@ -259,9 +259,156 @@ export const scenarios = {
     ],
     focus: { x: 20, y: 32 },
   },
+  /**
+   * Itération 3 : journée chargée, ~150 visiteurs et 40 animaux (mesure de performance). Deux rangées d'enclos
+   * de part et d'autre d'une promenade double, une allée au sud, un anneau qui relie le tout, trois stands de snacks.
+   */
+  'busy-day': {
+    seed: 5,
+    money: 500_000,
+    commands: busyDay(),
+    ticks: 270,
+    focus: { x: 23, y: 31 },
+  },
+  /**
+   * Itération 3 : zoo en crise, de jour. Argent négatif (dépenses > recettes), zèbres morts et affamés (ni eau ni
+   * nourrisseur), lions sans chemin (enclos invisible), pas de stand de snacks, billet cher, puis l'allée de la
+   * sortie est coupée : des visiteurs sont bloqués.
+   */
+  crisis: {
+    seed: 6,
+    money: 44_850,
+    commands: [
+      ...enclosure({ rect: [10, 31, 17, 38], biome: 'savanna', equipment: [put('tree', 11, 32)] }),
+      ...enclosure({
+        rect: [19, 30, 27, 38],
+        biome: 'savanna',
+        equipment: [water(19, 30), put('feeder', 27, 38), put('tree', 20, 36), put('tree', 26, 31)],
+        animals: [buy('giraffe', 23, 33), buy('giraffe', 24, 34)],
+      }),
+      ...enclosure({
+        rect: [30, 22, 37, 29],
+        biome: 'savanna',
+        equipment: [water(30, 22), put('feeder', 37, 29), put('rock', 33, 24)],
+        animals: [buy('lion', 33, 26), buy('lion', 35, 27)],
+      }),
+      ...mainAlley(39, 9, 29),
+      { type: 'SetTicketPrice', price: 50 },
+    ],
+    // Jour 1, 22 h 43 : achat des zèbres, sans eau ni nourrisseur ; ils meurent le jour 6 vers 9 h.
+    // L'argent de départ est réglé pour payer le zèbre du jour 2 et finir dans le rouge le jour 6.
+    ticks: 736,
+    steps: [
+      { commands: [buy('zebra', 13, 34), buy('zebra', 14, 35), buy('zebra', 15, 33)], ticks: 464 },
+      // Jour 2, 8 h : un zèbre de plus, encore vivant le jour 6 : les visiteurs viennent le voir et trouvent les corps.
+      { commands: [buy('zebra', 12, 36)], ticks: 4800 },
+      // Jour 6, 8 h : le joueur brade le billet pour attirer du monde.
+      { commands: [{ type: 'SetTicketPrice', price: 5 }], ticks: 110 },
+      // 10 h 12 : l'allée est coupée au milieu ; à l'ouest de la coupure, les visiteurs ne peuvent plus sortir.
+      { commands: [{ type: 'Demolish', target: { kind: 'tile', tile: { x: 24, y: 39 } } }], ticks: 40 },
+    ],
+    focus: { x: 20, y: 37 },
+  },
   /** Carte pleine (mesure de performance) : 36 enclos peints, quadrillage de chemins. */
   'full-map': { seed: 1, commands: fullMap(), ticks: 10 },
 } satisfies Record<string, Scenario>;
+
+function busyDay(): Command[] {
+  const commands: Command[] = [];
+  const decor = (x0: number, y0: number, x1: number, y1: number, kind: BuildingKind) => [
+    put(kind, x0 + 1, y0 + 1),
+    put(kind, x1 - 1, y0 + 1),
+    put(kind, x0 + 1, y1 - 1),
+    put(kind, x1 - 2, y1 - 2),
+  ];
+  // Rangée nord (y 17 → 28) et rangée sud (y 31 → 42) ; promenade double en y 29 et 30, allée en y 43.
+  for (const [y0, y1] of [
+    [17, 28],
+    [31, 42],
+  ] as const) {
+    const zebras = Array.from({ length: 8 }, (_, i) =>
+      buy('zebra', 5 + (i % 4) * 2, y0 + 3 + Math.floor(i / 4) * 4),
+    );
+    commands.push(
+      ...enclosure({
+        rect: [3, y0, 12, y1],
+        biome: 'savanna',
+        equipment: [
+          water(3, y0 + 5),
+          water(3, y0 + 6),
+          put('feeder', 12, y0 + 5),
+          ...decor(3, y0, 12, y1, 'tree'),
+        ],
+        animals: zebras,
+      }),
+    );
+    const giraffes = Array.from({ length: 6 }, (_, i) =>
+      buy('giraffe', 16 + (i % 3) * 3, y0 + 3 + Math.floor(i / 3) * 5),
+    );
+    commands.push(
+      ...enclosure({
+        rect: [14, y0, 24, y1],
+        biome: 'savanna',
+        equipment: [
+          water(24, y0 + 5),
+          water(24, y0 + 6),
+          put('feeder', 14, y0 + 5),
+          ...decor(14, y0, 24, y1, 'tree'),
+        ],
+        animals: giraffes,
+      }),
+    );
+    const lions = Array.from({ length: 4 }, (_, i) =>
+      buy('lion', 28 + (i % 2) * 4, y0 + 4 + Math.floor(i / 2) * 4),
+    );
+    commands.push(
+      ...enclosure({
+        rect: [26, y0, 35, y1],
+        biome: 'savanna',
+        equipment: [water(35, y0 + 5), put('feeder', 26, y0 + 6), ...decor(26, y0, 35, y1, 'rock')],
+        animals: lions,
+      }),
+    );
+    for (const [py0, py1] of [
+      [y0, y0 + 5],
+      [y0 + 6, y1],
+    ] as const) {
+      commands.push(
+        ...enclosure({
+          rect: [37, py0, 44, py1],
+          biome: 'forest',
+          equipment: [water(44, py0), put('feeder', 37, py1), ...decor(37, py0, 44, py1, 'bamboo')],
+          animals: [buy('panda', 40, py0 + 3)],
+        }),
+      );
+    }
+  }
+  const segment = (x0: number, y0: number, x1: number, y1: number): [TileCoord, TileCoord] => [
+    { x: x0, y: y0 },
+    { x: x1, y: y1 },
+  ];
+  commands.push(
+    ...paths(
+      segment(2, 29, 45, 29),
+      segment(2, 30, 45, 30),
+      segment(2, 43, 45, 43),
+      // Anneau et passages entre les enclos de la rangée sud : la promenade et l'allée sont reliées.
+      segment(2, 31, 2, 42),
+      segment(45, 31, 45, 42),
+      segment(45, 17, 45, 28),
+      segment(13, 31, 13, 42),
+      segment(25, 31, 25, 42),
+      segment(36, 31, 36, 42),
+      segment(21, 46, 21, 44),
+      segment(26, 46, 26, 44),
+    ),
+    put('snack', 22, 44),
+    put('snack', 25, 45),
+    put('snack', 1, 36),
+    put('snack', 46, 36),
+  );
+  return commands;
+}
 
 function fullMap(): Command[] {
   const commands: Command[] = [];

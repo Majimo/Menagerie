@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { zooAlerts } from '../../src/sim/alerts';
 import { animalStatus } from '../../src/sim/entities';
 import { timeOfDay } from '../../src/sim/time';
 import { runScenario, scenarios } from '../e2e/scenarios';
@@ -28,5 +29,33 @@ describe('scénarios de capture', () => {
       ]),
     );
     expect(timeOfDay(state.tick).sleeping).toBe(false);
+  });
+
+  it('busy-day : ~150 visiteurs, adultes et enfants, ~40 animaux contents, sans alerte, de jour', () => {
+    const state = runScenario(scenarios['busy-day']);
+    const visitors = Object.values(state.visitors);
+    expect(visitors.length).toBeGreaterThanOrEqual(130);
+    expect(visitors.length).toBeLessThanOrEqual(190);
+    expect(visitors.some((v) => v.kind === 'child')).toBe(true);
+    expect(visitors.filter((v) => v.state === 'viewing').length).toBeGreaterThan(20);
+    const animals = Object.values(state.animals);
+    expect(animals).toHaveLength(40);
+    expect(animals.every((a) => animalStatus(a) === 'content')).toBe(true);
+    const alerts = zooAlerts(state);
+    expect(alerts.unreachableEnclosures).toEqual([]);
+    expect(alerts.blockedVisitors).toBe(0);
+    expect(timeOfDay(state.tick).night).toBe(false);
+  });
+
+  it('crisis : argent négatif, animaux morts, enclos sans chemin, visiteurs bloqués, de jour', () => {
+    const state = runScenario(scenarios.crisis);
+    expect(state.money).toBeLessThan(0);
+    const statuses = Object.values(state.animals).map(animalStatus);
+    expect(statuses).toContain('dead');
+    const alerts = zooAlerts(state);
+    expect(alerts.unreachableEnclosures).toHaveLength(1);
+    expect(alerts.blockedVisitors).toBeGreaterThan(5);
+    expect(alerts.deficit).toBe(true);
+    expect(timeOfDay(state.tick).night).toBe(false);
   });
 });

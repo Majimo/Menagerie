@@ -12,6 +12,8 @@ const SCENARIOS: ScenarioName[] = [
   'full-map',
   'four-species',
   'animal-needs',
+  'busy-day',
+  'crisis',
 ];
 const OUT_DIR = `artifacts/screenshots/${ITERATION}`;
 
@@ -174,3 +176,70 @@ test('panneaux d’inspection d’un animal et d’un enclos @shots', async ({ p
   await nextFrames(page);
   await page.screenshot({ path: `${OUT_DIR}/panel-enclosure_${testInfo.project.name}_mid.png` });
 });
+
+// --- Itération 3 : visiteurs et économie ------------------------------------------------------------------
+
+test('panneaux Économie et Visiteur @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'wide', 'Desktop et mobile suffisent');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'busy-day' });
+  await page.evaluate(() => {
+    window.__game?.freezeTime();
+    window.__game?.setCamera('mid');
+  });
+  await page.getByTestId('economy-button').click();
+  await page.getByTestId('inspector').waitFor();
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/panel-economy_${testInfo.project.name}_mid.png` });
+  const visitor = await page.evaluate(() => {
+    const found = Object.values(window.__game?.getState().visitors ?? {}).find(
+      (v) => v.state === 'viewing' && v.kind === 'child',
+    );
+    return found ? { id: found.id, x: Math.floor(found.x), y: Math.floor(found.y) } : null;
+  });
+  if (!visitor) throw new Error('Aucun enfant en observation');
+  await page.evaluate((v) => {
+    window.__game?.inspect({ kind: 'visitor', id: v.id });
+    window.__game?.setCamera('close', { x: v.x, y: v.y });
+  }, visitor);
+  await page.waitForTimeout(300);
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/panel-visitor_${testInfo.project.name}_close.png` });
+});
+
+test('crise : bilan de la veille en déficit @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'wide', 'Desktop et mobile suffisent');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'crisis' });
+  await page.evaluate(() => {
+    window.__game?.freezeTime();
+    window.__game?.setCamera('mid');
+  });
+  await page.getByTestId('economy-button').click();
+  await page.getByTestId('inspector').waitFor();
+  await page.getByTestId('inspector').evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/panel-economy-crisis_${testInfo.project.name}_mid.png` });
+});
+
+for (const deficiency of ['protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'] as const) {
+  test(`foule et alertes sous ${deficiency} @shots`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Une seule taille suffit');
+    mkdirSync(OUT_DIR, { recursive: true });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: deficiency });
+    for (const scenario of ['busy-day', 'crisis'] as const) {
+      await openGame(page, { scenario });
+      await page.evaluate(() => {
+        window.__game?.freezeTime();
+        window.__game?.setCamera('close');
+      });
+      await nextFrames(page);
+      await page.screenshot({
+        path: `${OUT_DIR}/${scenario}-${deficiency}_${testInfo.project.name}_close.png`,
+      });
+    }
+  });
+}

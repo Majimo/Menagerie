@@ -37,7 +37,9 @@ test('les boutons à icône ont un nom accessible et une bulle d’aide', async 
   const iconButtons = page.locator('#ui button:has(svg.icon)');
   expect(await iconButtons.count()).toBeGreaterThan(0);
   for (const button of await iconButtons.all()) {
-    expect(await button.getAttribute('aria-label')).toBeTruthy();
+    // Nom accessible : `aria-label`, ou le texte du bouton (éventuellement masqué visuellement).
+    const name = (await button.getAttribute('aria-label')) ?? (await button.textContent())?.trim();
+    expect(name).toBeTruthy();
     expect(await button.getAttribute('title')).toBeTruthy();
   }
 });
@@ -90,6 +92,41 @@ test('les contrôles des panneaux font au moins 44 × 44 px', async ({ page }) =
   await page.getByRole('button', { name: 'Objets' }).click();
   await page.evaluate(() => window.__game?.inspect({ kind: 'zoo' }));
   await expect(page.getByTestId('inspector')).toBeVisible();
+  const controls = page.locator('#ui button');
+  const tooSmall: string[] = [];
+  for (const control of await controls.all()) {
+    if (!(await control.isVisible())) continue;
+    const box = await control.boundingBox();
+    if (box && (box.width < MIN_TOUCH_TARGET || box.height < MIN_TOUCH_TARGET)) {
+      tooSmall.push(
+        `${await control.evaluate((el) => el.outerHTML.slice(0, 80))} (${box.width}×${box.height})`,
+      );
+    }
+  }
+  expect(tooSmall).toEqual([]);
+});
+
+test('aucune violation axe avec les alertes de crise et les panneaux Économie et Visiteur', async ({
+  page,
+}) => {
+  await openGame(page, { scenario: 'crisis' });
+  await expect(page.getByTestId('alerts')).toContainText('bloqué');
+  expect(await blockingViolations(page)).toEqual([]);
+  await page.getByTestId('economy-button').click();
+  await expect(page.getByTestId('inspector')).toContainText('Économie du zoo');
+  expect(await blockingViolations(page)).toEqual([]);
+  const visitor = await page.evaluate(
+    () => Object.values(window.__game?.getState().visitors ?? {})[0]?.id ?? 0,
+  );
+  await page.evaluate((id) => window.__game?.inspect({ kind: 'visitor', id }), visitor);
+  await expect(page.getByTestId('inspector')).toContainText(/Adulte|Enfant/);
+  expect(await blockingViolations(page)).toEqual([]);
+});
+
+test('alertes et réglage du prix : contrôles d’au moins 44 × 44 px', async ({ page }) => {
+  await openGame(page, { scenario: 'crisis' });
+  await page.getByTestId('economy-button').click();
+  await expect(page.getByTestId('inspector')).toContainText('Économie du zoo');
   const controls = page.locator('#ui button');
   const tooSmall: string[] = [];
   for (const control of await controls.all()) {
