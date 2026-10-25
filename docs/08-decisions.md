@@ -106,6 +106,40 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
   `BASE_PATH` (`/<nom-du-repo>/` en CI, `/` par défaut) ; Three.js isolé dans un chunk `three` (~130 ko gzip).
 - **Conséquences** : bascule vers Cloudflare Pages ou Netlify possible sans changer le code (seulement `BASE_PATH`).
 
+## ADR-015 : Commandes appliquées immédiatement, entre deux ticks
+- **Statut** : accepté (itération 1) ; remplace « appliquée au prochain tick » de `03-architecture.md`
+- **Contexte** : construire doit marcher en pause (itération 2) et l'aperçu doit refléter l'état juste après l'action.
+- **Décision** : `dispatchCommand` valide et applique la commande tout de suite, au tick courant, puis met à jour les enclos.
+  `validateCommand` est pure et sert aussi à l'aperçu de placement.
+- **Conséquences** : déterminisme préservé (une partie = seed + liste de (tick, commande)) ; pas de file de commandes à gérer.
+
+## ADR-016 : Représentation du monde et détection d'enclos
+- **Statut** : accepté (itération 1)
+- **Décision** : tuiles en `number[]` (indice dans `TILE_TYPES`), clôtures sur les arêtes en deux tableaux 0/1
+  (`fencesH` : bord nord de chaque tuile, `fencesV` : bord ouest), sérialisables tels quels en JSON. Un enclos est une zone
+  reliée sans traverser de clôture qui ne s'ouvre pas sur le bord de carte (le bord n'est pas une clôture, mais on peut y en
+  poser). Il garde son id si la nouvelle zone reprend la majorité de ses tuiles. `enclosureOf` (tuile → enclos) est stocké
+  pour un survol en O(1) et recalculé seulement quand les clôtures changent.
+- **Conséquences** : ~7 000 nombres dans l'état pour 48×48, négligeable ; base64 possible plus tard si la sauvegarde grossit.
+
+## ADR-017 : Interaction de construction
+- **Statut** : accepté (itération 1)
+- **Décision** : chemin = ligne droite selon l'axe dominant ; biome = rectangle ; clôture = arête la plus proche, ou contour du
+  rectangle entre deux coins de tuiles en glissant ; démolir = clôture proche du pointeur ou chemin, rectangle en glissant,
+  50 % remboursés. Aperçu : ✓ sur fond plein, ✗ sur hachures à bord pointillé, symboles tournés pour rester droits à l'écran,
+  dessinés par-dessus le décor. Coût et raison du refus dans une info-bulle avant de relâcher ; message `aria-live` après.
+  Souris : clic gauche construit si un outil est actif, sinon déplace ; tactile : un doigt construit ou déplace, deux doigts
+  déplacent et zooment ; clavier : flèches/ZQSD, +/−, A/E, Échap.
+- **Conséquences** : un enclos se ferme en un seul geste. Le « fun » du geste reste à valider en playtest.
+
+## ADR-018 : Performance de la carte pleine
+- **Statut** : constaté (itération 1)
+- **Contexte** : critère « 60 fps sur la carte pleine ».
+- **Mesure** : scénario `full-map` (36 enclos, 1 008 clôtures, toutes les tuiles peintes), 1920×1080, Chromium avec GPU
+  (ANGLE Metal, Apple M3 Pro) : 60 fps (limite de synchro), p95 16,8 ms. En rendu logiciel SwiftShader (tests) : 12 fps, attendu.
+- **Conséquences** : 9 maillages de chunks + 1 `InstancedMesh` de clôtures + calques d'aperçu instanciés ; marge confortable.
+  Mesure mobile à faire.
+
 ---
 
 ## Journal des playtests

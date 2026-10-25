@@ -47,12 +47,12 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 - Entrée et sortie du zoo pré-placées.
 
 **Critères d'acceptation**
-- [ ] On peint un biome, on trace un chemin, on ferme un enclos à la clôture ; l'enclos est détecté et sa surface s'affiche au survol.
-- [ ] Un aperçu vert/rouge indique si le placement est valide ; l'argent se décrémente.
-- [ ] Les commandes invalides affichent un message clair.
-- [ ] Tests : flood fill (enclos simple, enclos en L, enclos non fermé), coûts, déterminisme du PRNG.
-- [ ] 60 fps sur la carte pleine.
-- [ ] Revue visuelle : scénarios `empty-map` et `first-enclosure` capturés (desktop et mobile, 3 zooms) et conformes à la grille ; aperçu valide/invalide distinguable sans la couleur ; boutons de la barre d'outils étiquetés et ≥ 44 px.
+- [x] On peint un biome, on trace un chemin, on ferme un enclos à la clôture ; l'enclos est détecté et sa surface s'affiche au survol.
+- [x] Un aperçu vert/rouge indique si le placement est valide ; l'argent se décrémente.
+- [x] Les commandes invalides affichent un message clair.
+- [x] Tests : flood fill (enclos simple, enclos en L, enclos non fermé), coûts, déterminisme du PRNG.
+- [x] 60 fps sur la carte pleine.
+- [x] Revue visuelle : scénarios `empty-map` et `first-enclosure` capturés (desktop et mobile, 3 zooms) et conformes à la grille ; aperçu valide/invalide distinguable sans la couleur ; boutons de la barre d'outils étiquetés et ≥ 44 px.
 
 **Prompt** : « Réalise l'itération 1 de docs/05-roadmap-poc.md. Propose d'abord un plan en 8 points maximum. »
 

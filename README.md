@@ -63,7 +63,7 @@ la vérifie et la clôture. On peut aussi cibler une itération : `/jalon-suivan
 ## Statut
 
 - [x] Itération 0 : setup
-- [ ] Itération 1 : monde, caméra, construction
+- [x] Itération 1 : monde, caméra, construction
 - [ ] Itération 2 : animaux
 - [ ] Itération 3 : visiteurs et économie
 - [ ] Itération 4 : boucle de jeu, équilibrage, sauvegarde

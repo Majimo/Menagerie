@@ -99,6 +99,12 @@ Déclencheurs (voir tableau plus bas) :
 - UI en DOM natif : acceptable jusqu'à une UI riche, puis envisager un petit framework (Preact, Lit).
 - Équilibrage par scénario scripté unique : prévoir un banc de simulations multi-scénarios.
 - Tests e2e contre le serveur de dev seulement : ajouter un passage sur le build de production (`vite preview`) en CI.
+- Construction (itération 1) : on peut poser un chemin dans un enclos et fermer un enclos autour de l'entrée ;
+  à interdire quand les visiteurs et les animaux arriveront (validation par simulation du remplissage).
+- Pas d'annuler / refaire : les commandes sont des données, l'historique (tick, commande) suffira à l'implémenter.
+- Aperçu de démolition « en rectangle » limité aux chemins et clôtures : les biomes ne se démolissent pas (on repeint).
+- Performance mesurée sur un seul poste (Apple M3 Pro, 60 fps) : mesurer sur mobile milieu de gamme.
+- Sable et chemin ont des couleurs proches ; le relief du chemin les distingue, à revoir si les retours de jeu le signalent.
 
 ## Questions ouvertes
 

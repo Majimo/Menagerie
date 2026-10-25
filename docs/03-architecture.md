@@ -84,7 +84,7 @@ pas de fonctions dans l'état.
 
 ### Commandes
 
-Toute action du joueur est une commande validée puis appliquée au prochain tick :
+Toute action du joueur est une commande validée puis appliquée entre deux ticks, au tick courant (ADR-015) :
 
 `PlacePath`, `PlaceFence`, `PaintBiome`, `PlaceBuilding`, `Demolish`, `BuyAnimal`, `SetTicketPrice`, `SetSpeed`…
 
