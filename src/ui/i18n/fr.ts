@@ -6,7 +6,6 @@ export const fr = {
   'scene.label': 'Vue isométrique du zoo',
   'debug.fps': 'FPS',
   'debug.tick': 'Tick',
-  'commands.notImplemented': "Cette action n'est pas encore disponible.",
 } as const;
 
 export type TextKey = keyof typeof fr;
