@@ -10,6 +10,7 @@ import {
 import { coloredBox, flatMaterial, merged, paint } from './geometry';
 import { createGiraffe, createLion, createPanda, createZebra } from './models/animals';
 import { bambooGeometry, feederGeometry, rockGeometry, treeGeometry } from './models/decor';
+import { createVisitorModel, snackStandGeometry } from './models/visitors';
 import { palette } from './palette';
 
 // Registre d'assets : un modèle est demandé par id. Le chargement glTF arrive avec les premiers modèles ;
@@ -69,6 +70,9 @@ const procedural: Record<string, ProceduralFactory> = {
   'decor.tree': staticModel(treeGeometry),
   'decor.rock': staticModel(rockGeometry),
   'decor.bamboo': staticModel(bambooGeometry),
+  'building.snack': staticModel(snackStandGeometry),
+  'visitor.adult': () => createVisitorModel('adult'),
+  'visitor.child': () => createVisitorModel('child'),
 };
 
 /** Modèle procédural affiché quand l'id est inconnu : visible, sans faire planter le jeu. */

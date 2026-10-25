@@ -1,5 +1,5 @@
 import type { SpeciesId } from '../sim/data/species';
-import type { AnimalStatus } from '../sim/entities';
+import type { AnimalStatus, VisitorMood } from '../sim/entities';
 
 // Icônes maison dessinées sur canvas (pas d'emoji système, docs/04) : partagées par le rendu 3D (sprites)
 // et par l'interface (images). Chaque état combine une forme, un pictogramme et une couleur.
@@ -153,6 +153,125 @@ const STATUS_DRAW: Record<Exclude<AnimalStatus, 'content'>, Draw> = {
   },
 };
 
+/** Humeurs affichées en bulle au-dessus des visiteurs (« neutre » n'a pas de bulle). */
+export type ShownMood = Exclude<VisitorMood, 'neutral'>;
+
+export const MOOD_COLORS: Record<ShownMood, string> = {
+  joy: '#d6336c',
+  happy: '#b07800',
+  bored: '#5f6b7d',
+  unhappy: '#b8321f',
+  sad: '#4f5fa8',
+  hungry: '#c8661a',
+  blocked: '#7d1d1d',
+};
+
+function face(ctx: CanvasRenderingContext2D, mouth: 'smile' | 'flat' | 'frown', y = 40): void {
+  glyphStyle(ctx);
+  ctx.beginPath();
+  ctx.arc(37, y, 5, 0, Math.PI * 2);
+  ctx.arc(59, y, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  if (mouth === 'smile') ctx.arc(48, y + 12, 14, Math.PI * 0.15, Math.PI * 0.85);
+  else if (mouth === 'frown') ctx.arc(48, y + 32, 14, Math.PI * 1.2, Math.PI * 1.8);
+  else {
+    ctx.moveTo(36, y + 20);
+    ctx.lineTo(60, y + 20);
+  }
+  ctx.stroke();
+}
+
+function star(ctx: CanvasRenderingContext2D, cx: number, cy: number, outer: number, inner: number): void {
+  const points: [number, number][] = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    points.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+  }
+  polygon(ctx, points);
+}
+
+const MOOD_DRAW: Record<ShownMood, Draw> = {
+  // Ravi : cœur.
+  joy: (ctx) => {
+    outlined(ctx, MOOD_COLORS.joy, () => {
+      ctx.moveTo(48, 86);
+      ctx.bezierCurveTo(6, 56, 4, 22, 28, 14);
+      ctx.bezierCurveTo(40, 10, 48, 20, 48, 28);
+      ctx.bezierCurveTo(48, 20, 56, 10, 68, 14);
+      ctx.bezierCurveTo(92, 22, 90, 56, 48, 86);
+    });
+    glyphStyle(ctx);
+    ctx.beginPath();
+    ctx.arc(30, 32, 6, 0, Math.PI * 2);
+    ctx.fill();
+  },
+  // Amusé : étoile, sourire.
+  happy: (ctx) => {
+    outlined(ctx, MOOD_COLORS.happy, () => star(ctx, 48, 52, 44, 22));
+    glyphStyle(ctx);
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(42, 50, 3.5, 0, Math.PI * 2);
+    ctx.arc(54, 50, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(48, 56, 9, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+  },
+  // Ennuyé : rectangle arrondi, bouche plate.
+  bored: (ctx) => {
+    outlined(ctx, MOOD_COLORS.bored, () => ctx.roundRect(8, 16, 80, 64, 20));
+    face(ctx, 'flat', 38);
+  },
+  // En colère : éclat à pointes, sourcils froncés.
+  unhappy: (ctx) => {
+    outlined(ctx, MOOD_COLORS.unhappy, () => star(ctx, 48, 48, 46, 34));
+    face(ctx, 'frown', 46);
+    ctx.beginPath();
+    ctx.moveTo(29, 33);
+    ctx.lineTo(42, 39);
+    ctx.moveTo(67, 33);
+    ctx.lineTo(54, 39);
+    ctx.stroke();
+  },
+  // Triste (animal mort ou malheureux) : disque, larme.
+  sad: (ctx) => {
+    outlined(ctx, MOOD_COLORS.sad, () => ctx.arc(48, 48, 40, 0, Math.PI * 2));
+    face(ctx, 'frown', 38);
+    ctx.beginPath();
+    ctx.moveTo(62, 48);
+    ctx.quadraticCurveTo(68, 58, 62, 62);
+    ctx.quadraticCurveTo(56, 58, 62, 48);
+    ctx.fill();
+  },
+  // A faim : disque, burger.
+  hungry: (ctx) => {
+    outlined(ctx, MOOD_COLORS.hungry, () => ctx.arc(48, 48, 40, 0, Math.PI * 2));
+    glyphStyle(ctx);
+    ctx.beginPath();
+    ctx.arc(48, 46, 22, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(25, 50, 46, 7);
+    ctx.beginPath();
+    ctx.roundRect(26, 60, 44, 10, 5);
+    ctx.fill();
+  },
+  // Bloqué : octogone, barre de sens interdit.
+  blocked: (ctx) => {
+    const points: [number, number][] = [];
+    for (let i = 0; i < 8; i++) {
+      const a = Math.PI / 8 + (i * Math.PI) / 4;
+      points.push([48 + Math.cos(a) * 44, 48 + Math.sin(a) * 44]);
+    }
+    outlined(ctx, MOOD_COLORS.blocked, () => polygon(ctx, points));
+    glyphStyle(ctx);
+    ctx.fillRect(22, 40, 52, 16);
+  },
+};
+
 const SPECIES_DRAW: Record<SpeciesId, Draw> = {
   // Zèbre : tête longue blanche, rayures noires, museau noir, oreilles pointues.
   zebra: (ctx) => {
@@ -289,6 +408,32 @@ function cached(key: string, draw: Draw): HTMLCanvasElement {
 
 export function statusIcon(status: Exclude<AnimalStatus, 'content'>): HTMLCanvasElement {
   return cached(`status.${status}`, STATUS_DRAW[status]);
+}
+
+/** Alerte : triangle, point d'exclamation (enclos sans chemin, problèmes du zoo). */
+export const ALERT_COLOR = '#c2412d';
+
+function drawAlert(ctx: CanvasRenderingContext2D): void {
+  outlined(ctx, ALERT_COLOR, () =>
+    polygon(ctx, [
+      [48, 6],
+      [92, 86],
+      [4, 86],
+    ]),
+  );
+  glyphStyle(ctx);
+  ctx.fillRect(43, 32, 10, 30);
+  ctx.beginPath();
+  ctx.arc(48, 73, 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+export function alertIcon(): HTMLCanvasElement {
+  return cached('alert', drawAlert);
+}
+
+export function moodIcon(mood: ShownMood): HTMLCanvasElement {
+  return cached(`mood.${mood}`, MOOD_DRAW[mood]);
 }
 
 export function speciesIcon(species: SpeciesId): HTMLCanvasElement {

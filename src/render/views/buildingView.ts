@@ -45,7 +45,7 @@ export function createBuildingView(): BuildingView {
         mesh.receiveShadow = true;
         ofKind.forEach((building, i) => {
           // Rotation propre à chaque décor (dérivée de l'id) : la forêt ne paraît pas clonée.
-          const angle = kind === 'feeder' ? 0 : building.id * 2.39996;
+          const angle = kind === 'feeder' || kind === 'snack' ? 0 : building.id * 2.39996;
           rotation.setFromAxisAngle(up, angle);
           matrix.compose(new Vector3(building.tile.x + 0.5, 0, building.tile.y + 0.5), rotation, one);
           mesh.setMatrixAt(i, matrix);

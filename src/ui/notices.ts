@@ -1,9 +1,11 @@
 import { deathCause } from '../sim/entities';
 import type { AnimalId, GameState } from '../sim/state';
+import { ledgerNet } from '../sim/systems/economy';
 import type { Toast } from './feedback';
-import { t } from './i18n';
+import { formatSigned, t } from './i18n';
 
-// Annonces des événements graves (mort d'un animal), lues par les lecteurs d'écran via le message `aria-live`.
+// Annonces des événements de la partie (mort d'un animal, bilan de fin de journée), lues par les lecteurs d'écran
+// via le message `aria-live`.
 
 export interface Notices {
   update(state: Readonly<GameState>): void;
@@ -12,6 +14,7 @@ export interface Notices {
 export function createNotices(toast: Toast): Notices {
   let announced = new Set<AnimalId>();
   let lastState: Readonly<GameState> | null = null;
+  let lastDay = 0;
   return {
     update(state) {
       if (state !== lastState) {
@@ -22,7 +25,21 @@ export function createNotices(toast: Toast): Notices {
             .map((a) => a.id),
         );
         lastState = state;
+        lastDay = state.stats.today.day;
         return;
+      }
+      if (state.stats.today.day !== lastDay) {
+        lastDay = state.stats.today.day;
+        const ended = state.stats.history[state.stats.history.length - 1];
+        if (ended)
+          toast.show(
+            t('notice.dayEnd', {
+              day: ended.day,
+              net: formatSigned(ledgerNet(ended)),
+              count: ended.visitors,
+            }),
+            'info',
+          );
       }
       for (const animal of Object.values(state.animals)) {
         if (animal.diedAt < 0 || announced.has(animal.id)) continue;

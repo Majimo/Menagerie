@@ -1,33 +1,40 @@
-import type { AnimalId, GameState } from '../sim/state';
+import type { Command, CommandResult } from '../sim/commands';
+import type { AnimalId, GameState, VisitorId } from '../sim/state';
 import { inBounds } from '../sim/world/grid';
 import { h } from './dom';
 import { t } from './i18n';
 import { icon } from './icons';
 import { animalPanel } from './panels/animalPanel';
+import { economyPanel } from './panels/economyPanel';
 import { enclosurePanel } from './panels/enclosurePanel';
-import type { PanelContent, Selection } from './panels/types';
+import type { PanelContent, PanelNavigation, Selection } from './panels/types';
+import { visitorPanel } from './panels/visitorPanel';
 import { zooPanel } from './panels/zooPanel';
 
 export type { Selection } from './panels/types';
 
-// Panneau d'inspection (zoo, enclos, animal). Reconstruit seulement quand son contenu change, en gardant le focus
+// Panneau d'inspection (zoo, économie, enclos, animal, visiteur). Reconstruit seulement quand son contenu change, en gardant le focus
 // clavier sur le même bouton.
 
 /** Rafraîchissement du contenu : inutile à chaque frame, les jauges bougent lentement. */
 const REFRESH_MS = 250;
-/** Distance (en tuiles) en deçà de laquelle un clic vise un animal. */
+/** Distance (en tuiles) en deçà de laquelle un clic vise un animal ou un visiteur. */
 const PICK_RADIUS = 0.7;
+const VISITOR_PICK_RADIUS = 0.45;
 
-export interface Inspector {
+export interface Inspector extends PanelNavigation {
   readonly selection: Selection | null;
   readonly selectedAnimal: AnimalId | null;
-  select(selection: Selection | null): void;
-  /** Clic ou appui sur le terrain sans outil actif : animal le plus proche, sinon enclos, sinon fermeture. */
+  readonly selectedVisitor: VisitorId | null;
+  /** Clic ou appui sur le terrain sans outil actif : animal ou visiteur le plus proche, sinon enclos, sinon fermeture. */
   pickAt(state: Readonly<GameState>, point: { x: number; z: number }): void;
   update(state: Readonly<GameState>, now: number): void;
 }
 
-export function createInspector(parent: HTMLElement): Inspector {
+export function createInspector(
+  parent: HTMLElement,
+  dispatch: (command: Command) => CommandResult,
+): Inspector {
   const panel = h('section', { className: 'inspector', attrs: { 'aria-labelledby': 'inspector-title' } });
   panel.dataset.testid = 'inspector';
   panel.hidden = true;
@@ -54,6 +61,15 @@ export function createInspector(parent: HTMLElement): Inspector {
     get selectedAnimal() {
       return selection?.kind === 'animal' ? selection.id : null;
     },
+    get selectedVisitor() {
+      return selection?.kind === 'visitor' ? selection.id : null;
+    },
+    dispatch(command) {
+      const result = dispatch(command);
+      // Effet immédiat dans le panneau.
+      lastRefresh = Number.NEGATIVE_INFINITY;
+      return result;
+    },
     select(next) {
       // Ouvert depuis le panneau ou un bouton : le focus suit vers le nouveau titre.
       moveFocus =
@@ -65,13 +81,19 @@ export function createInspector(parent: HTMLElement): Inspector {
       lastRefresh = Number.NEGATIVE_INFINITY;
     },
     pickAt(state, point) {
-      let best: { id: AnimalId; distance: number } | null = null;
+      let best: { selection: Selection; distance: number } | null = null;
       for (const animal of Object.values(state.animals)) {
         const distance = Math.hypot(animal.x - point.x, animal.y - point.z);
-        if (distance < PICK_RADIUS && (!best || distance < best.distance)) best = { id: animal.id, distance };
+        if (distance < PICK_RADIUS && (!best || distance < best.distance))
+          best = { selection: { kind: 'animal', id: animal.id }, distance };
+      }
+      for (const visitor of Object.values(state.visitors)) {
+        const distance = Math.hypot(visitor.x - point.x, visitor.y - point.z);
+        if (distance < VISITOR_PICK_RADIUS && (!best || distance < best.distance))
+          best = { selection: { kind: 'visitor', id: visitor.id }, distance };
       }
       if (best) {
-        inspector.select({ kind: 'animal', id: best.id });
+        inspector.select(best.selection);
         return;
       }
       const tile = { x: Math.floor(point.x), y: Math.floor(point.z) };
@@ -112,6 +134,8 @@ export function createInspector(parent: HTMLElement): Inspector {
     switch (current.kind) {
       case 'zoo':
         return zooPanel(state, inspector);
+      case 'economy':
+        return economyPanel(state, inspector);
       case 'enclosure': {
         const enclosure = state.enclosures[current.id];
         return enclosure ? enclosurePanel(state, enclosure, inspector) : null;
@@ -119,6 +143,10 @@ export function createInspector(parent: HTMLElement): Inspector {
       case 'animal': {
         const animal = state.animals[current.id];
         return animal ? animalPanel(state, animal, inspector) : null;
+      }
+      case 'visitor': {
+        const visitor = state.visitors[current.id];
+        return visitor ? visitorPanel(state, visitor, inspector) : null;
       }
     }
   }

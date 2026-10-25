@@ -10,7 +10,12 @@ export interface MoneyDisplay {
   reset(): void;
 }
 
-export function createMoneyDisplay(parent: HTMLElement, reducedMotion: boolean): MoneyDisplay {
+/** `extra` : éléments ajoutés à droite du montant (note et visiteurs). */
+export function createMoneyDisplay(
+  parent: HTMLElement,
+  reducedMotion: boolean,
+  extra: HTMLElement[] = [],
+): MoneyDisplay {
   const box = document.createElement('div');
   box.className = 'money';
   box.setAttribute('role', 'group');
@@ -21,7 +26,10 @@ export function createMoneyDisplay(parent: HTMLElement, reducedMotion: boolean):
   const delta = document.createElement('span');
   delta.className = 'money-delta';
   delta.setAttribute('aria-hidden', 'true');
-  box.append(icon('coin'), value, delta);
+  const amount = document.createElement('span');
+  amount.className = 'money-amount';
+  amount.append(icon('coin'), value, delta);
+  box.append(amount, ...extra);
   parent.append(box);
 
   let shown: number | null = null;

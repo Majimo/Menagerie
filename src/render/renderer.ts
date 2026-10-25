@@ -11,7 +11,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three';
-import type { AnimalId, GameState, World } from '../sim/state';
+import type { AnimalId, GameState, VisitorId, World } from '../sim/state';
 import { timeOfDay } from '../sim/time';
 import { type CameraPreset, createIsoCamera, type IsoCamera } from './camera';
 import { applyDaylight, type DaylightRig } from './daylight';
@@ -24,6 +24,8 @@ import { createEnclosureBadgeView } from './views/enclosureBadgeView';
 import { createFenceView } from './views/fenceView';
 import { createGateView } from './views/gateView';
 import { createPreviewView, type Preview } from './views/previewView';
+import { createViewSpotView } from './views/viewSpotView';
+import { createVisitorView } from './views/visitorView';
 
 // Scène, lumières et rendu d'une frame. Le rendu lit l'état, il ne le modifie jamais (règle d'architecture n° 2).
 
@@ -38,6 +40,7 @@ export interface RenderFrame {
   /** Fraction du tick suivant déjà écoulée, pour interpoler les entités. */
   alpha: number;
   selectedAnimal: AnimalId | null;
+  selectedVisitor: VisitorId | null;
 }
 
 export interface GameRenderer {
@@ -81,12 +84,16 @@ export function createRenderer(
   const buildings = createBuildingView();
   const animals = createAnimalView();
   const badges = createEnclosureBadgeView();
+  const viewSpots = createViewSpotView();
+  const visitors = createVisitorView();
   scene.add(
     terrain.group,
     fences.mesh,
     gates.group,
     buildings.group,
+    viewSpots.group,
     animals.group,
+    visitors.group,
     badges.group,
     preview.group,
   );
@@ -101,6 +108,8 @@ export function createRenderer(
     fences.mesh,
     gates.group,
     buildings.group,
+    viewSpots.group,
+    visitors.group,
     badges.group,
     preview.group,
   ];
@@ -126,6 +135,18 @@ export function createRenderer(
       terrain.update(state.world);
       fences.update(state.world);
       buildings.update(state.buildings);
+      viewSpots.update(state);
+      const animate = !(options.reducedMotion || frozen);
+      visitors.update({
+        visitors: state.visitors,
+        tick: state.tick,
+        alpha: frozen ? 1 : frame.alpha,
+        now,
+        deltaMs: delta,
+        worldPerPixel: iso.worldPerPixel,
+        animate,
+        selected: frame.selectedVisitor,
+      });
       animals.update({
         animals: state.animals,
         // Captures figées : pas d'interpolation, la position est celle du dernier tick.
@@ -133,7 +154,7 @@ export function createRenderer(
         now,
         deltaMs: delta,
         worldPerPixel: iso.worldPerPixel,
-        animate: !(options.reducedMotion || frozen),
+        animate,
         selected: frame.selectedAnimal,
         silhouette,
       });

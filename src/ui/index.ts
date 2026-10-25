@@ -1,5 +1,7 @@
 import type { GameRenderer } from '../render/renderer';
+import type { Command, CommandResult } from '../sim/commands';
 import type { GameState } from '../sim/state';
+import { createAlertsBar } from './alerts';
 import { h } from './dom';
 import { createToast, createTooltip, type TooltipLine } from './feedback';
 import { createCameraControls, createMoneyDisplay } from './hud';
@@ -11,6 +13,7 @@ import { createTimeControls, type GameSpeed } from './timeControls';
 import { createToolbar } from './toolbar';
 import type { ToolController, ToolOutcome } from './tools';
 import { tileUnder } from './toolTargets';
+import { createZooStatus } from './zooStatus';
 
 // Coquille DOM de l'application et interface de jeu en surimpression du canvas.
 
@@ -35,11 +38,16 @@ interface GameUiDeps {
   renderer: GameRenderer;
   speed: GameSpeed;
   reducedMotion: boolean;
+  dispatch: (command: Command) => CommandResult;
 }
 
-export function createGameUi({ root, tools, renderer, speed, reducedMotion }: GameUiDeps): GameUi {
-  const money = createMoneyDisplay(root, reducedMotion);
-  const inspector = createInspector(root);
+export function createGameUi({ root, tools, renderer, speed, reducedMotion, dispatch }: GameUiDeps): GameUi {
+  const status = createZooStatus(() =>
+    inspector.select(inspector.selection?.kind === 'economy' ? null : { kind: 'economy' }),
+  );
+  const money = createMoneyDisplay(root, reducedMotion, [status.el]);
+  const inspector = createInspector(root, dispatch);
+  const alerts = createAlertsBar(root, inspector);
   const zooButton = h('button', {
     className: 'zoo-button',
     attrs: { 'data-testid': 'zoo-button', 'aria-label': t('zoo.button'), title: t('zoo.button.help') },
@@ -60,6 +68,8 @@ export function createGameUi({ root, tools, renderer, speed, reducedMotion }: Ga
       if (state !== lastState) money.reset();
       lastState = state;
       money.update(state.money);
+      status.update(state);
+      alerts.update(state, now);
       clock.update(state.tick);
       inspector.update(state, now);
       notices.update(state);

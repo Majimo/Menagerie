@@ -39,3 +39,16 @@ const numberFormat = new Intl.NumberFormat('fr-FR');
 export function formatMoney(amount: number): string {
   return numberFormat.format(amount);
 }
+
+const ratingFormat = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** Note du zoo, une décimale : « 3,2 ». */
+export function formatRating(rating: number): string {
+  return ratingFormat.format(Math.floor(rating * 10) / 10);
+}
+
+/** Montant signé : « +1 200 », « −350 ». */
+export function formatSigned(amount: number): string {
+  const rounded = Math.round(amount);
+  return `${rounded >= 0 ? '+' : '−'}${formatMoney(Math.abs(rounded))}`;
+}

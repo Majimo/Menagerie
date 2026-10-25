@@ -2,9 +2,11 @@ import { CanvasTexture, Group, LinearFilter, Sprite, SpriteMaterial, SRGBColorSp
 import { SPECIES_IDS, type SpeciesId } from '../../sim/data/species';
 import type { GameState } from '../../sim/state';
 import { animalsIn } from '../../sim/world/habitat';
-import { speciesIcon } from '../icons';
+import { visitorNetwork } from '../../sim/world/visitorNetwork';
+import { ALERT_COLOR, alertIcon, speciesIcon } from '../icons';
 
 // Badge flottant au-dessus de chaque enclos habité : icônes des espèces présentes, lisible au zoom éloigné.
+// Un enclos qu'aucun chemin relié à l'entrée ne longe porte un triangle d'alerte et un contour rouge.
 
 const BADGE_HEIGHT_PX = 42;
 const ICON = 80;
@@ -23,15 +25,15 @@ export interface EnclosureBadgeView {
   update(state: Readonly<GameState>, worldPerPixel: number): void;
 }
 
-function drawBadge(species: SpeciesId[]): HTMLCanvasElement {
+function drawBadge(species: SpeciesId[], unreachable: boolean): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = species.length * ICON + PAD * 2;
+  canvas.width = (species.length + (unreachable ? 1 : 0)) * ICON + PAD * 2;
   canvas.height = ICON + PAD * 2;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Contexte 2D indisponible');
   ctx.fillStyle = '#fff6e5';
-  ctx.strokeStyle = '#2d2a24';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = unreachable ? ALERT_COLOR : '#2d2a24';
+  ctx.lineWidth = unreachable ? 8 : 4;
   ctx.beginPath();
   ctx.roundRect(2, 2, canvas.width - 4, canvas.height - 4, canvas.height / 2);
   ctx.fill();
@@ -39,6 +41,7 @@ function drawBadge(species: SpeciesId[]): HTMLCanvasElement {
   species.forEach((id, i) => {
     ctx.drawImage(speciesIcon(id), PAD + i * ICON, PAD, ICON, ICON);
   });
+  if (unreachable) ctx.drawImage(alertIcon(), PAD + species.length * ICON, PAD, ICON, ICON);
   return canvas;
 }
 
@@ -50,11 +53,13 @@ export function createEnclosureBadgeView(): EnclosureBadgeView {
     group,
     update(state, worldPerPixel) {
       const seen = new Set<number>();
+      const { viewSpots } = visitorNetwork(state);
       for (const enclosure of Object.values(state.enclosures)) {
         const present = new Set(animalsIn(state, enclosure.id).map((a) => a.species));
         if (present.size === 0) continue;
         const species = SPECIES_IDS.filter((id) => present.has(id));
-        const key = `${species.join(',')}|${enclosure.tiles.length}|${enclosure.tiles[0]}`;
+        const unreachable = !viewSpots.has(enclosure.id);
+        const key = `${species.join(',')}|${enclosure.tiles.length}|${enclosure.tiles[0]}|${unreachable}`;
         seen.add(enclosure.id);
         let badge = badges.get(enclosure.id);
         if (badge?.key !== key) {
@@ -63,7 +68,11 @@ export function createEnclosureBadgeView(): EnclosureBadgeView {
             badge.sprite.material.map?.dispose();
             badge.sprite.material.dispose();
           }
-          badge = createBadge(key, species, anchorOf(enclosure.tiles, state.world.width));
+          badge = createBadge(
+            key,
+            drawBadge(species, unreachable),
+            anchorOf(enclosure.tiles, state.world.width),
+          );
           group.add(badge.sprite);
           badges.set(enclosure.id, badge);
         }
@@ -81,8 +90,7 @@ export function createEnclosureBadgeView(): EnclosureBadgeView {
   };
 }
 
-function createBadge(key: string, species: SpeciesId[], anchor: { x: number; z: number }): Badge {
-  const canvas = drawBadge(species);
+function createBadge(key: string, canvas: HTMLCanvasElement, anchor: { x: number; z: number }): Badge {
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.minFilter = LinearFilter;

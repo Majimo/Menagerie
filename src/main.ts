@@ -26,7 +26,14 @@ const tools = createToolController(
   (command) => dispatchCommand(session.state, command),
 );
 const speed = createGameSpeed();
-const ui = createGameUi({ root: uiRoot, tools, renderer, speed, reducedMotion });
+const ui = createGameUi({
+  root: uiRoot,
+  tools,
+  renderer,
+  speed,
+  reducedMotion,
+  dispatch: (command) => dispatchCommand(session.state, command),
+});
 const debugOverlay = new URLSearchParams(window.location.search).has('debug')
   ? createDebugOverlay(document.body)
   : null;
@@ -86,6 +93,7 @@ function frame(now: number): void {
     now,
     alpha: tickFraction(clock),
     selectedAnimal: ui.inspector.selectedAnimal,
+    selectedVisitor: ui.inspector.selectedVisitor,
   });
   ui.update(session.state, now);
   debugOverlay?.frame(now, session.state.tick);
