@@ -47,6 +47,7 @@ export function createToolbar(parent: HTMLElement, tools: ToolController): void 
     button.type = 'button';
     button.className = 'biome-button';
     button.dataset.biome = biome;
+    button.title = t(`biome.${biome}`);
     const swatch = document.createElement('span');
     swatch.className = `swatch swatch-${biome}`;
     swatch.setAttribute('aria-hidden', 'true');

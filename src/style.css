@@ -191,7 +191,8 @@ button:focus-visible {
 
 /* Outil actif : fond plein, bord épais et soulignement, pas seulement une couleur. */
 .tool-button[aria-pressed="true"] {
-  background: var(--ui-accent);
+  /* Accent assombri : texte blanc ≥ 4,5:1. */
+  background: #2f7148;
   border-color: var(--ui-ink);
   color: #fff;
   text-decoration: underline;

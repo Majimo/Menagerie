@@ -48,3 +48,24 @@ test('capture d’un aperçu de clôture qui chevauche une clôture existante @s
   await nextFrames(page);
   await page.screenshot({ path: `${OUT_DIR}/fence-preview_${testInfo.project.name}_mid.png` });
 });
+
+// Aperçu valide / invalide sous simulation de daltonisme : il doit rester lisible sans la couleur.
+for (const deficiency of ['achromatopsia', 'deuteranopia'] as const) {
+  test(`capture de l’aperçu sous ${deficiency} @shots`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Une seule taille suffit');
+    mkdirSync(OUT_DIR, { recursive: true });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: deficiency });
+    await openGame(page, { scenario: 'first-enclosure' });
+    await page.evaluate(() => {
+      const game = window.__game;
+      game?.freezeTime();
+      game?.previewTool('path', { x: 13, y: 42 }, { x: 24, y: 42 });
+      game?.setCamera('close');
+    });
+    await nextFrames(page);
+    await page.screenshot({
+      path: `${OUT_DIR}/first-enclosure-${deficiency}_${testInfo.project.name}_close.png`,
+    });
+  });
+}
