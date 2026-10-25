@@ -13,6 +13,7 @@ export function createDebugOverlay(parent: HTMLElement): DebugOverlay {
   el.className = 'debug-overlay';
   el.setAttribute('aria-hidden', 'true');
   el.dataset.testid = 'debug-overlay';
+  el.textContent = `${t('debug.fps')} … · ${t('debug.tick')} 0`;
   parent.append(el);
 
   let frames = 0;

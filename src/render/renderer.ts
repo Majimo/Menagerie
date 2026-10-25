@@ -6,7 +6,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   type Object3D,
-  PCFSoftShadowMap,
+  PCFShadowMap,
   PlaneGeometry,
   Scene,
   WebGLRenderer,
@@ -38,7 +38,7 @@ export function createRenderer(canvas: HTMLCanvasElement, options: RendererOptio
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.shadowMap.type = PCFShadowMap;
 
   const scene = new Scene();
   scene.background = new Color(SKY);
@@ -62,7 +62,8 @@ export function createRenderer(canvas: HTMLCanvasElement, options: RendererOptio
 
   return {
     render(_state, now) {
-      if (!frozen && !options.reducedMotion) animateCube(cube, now);
+      // Figé : animations décoratives ramenées à t = 0, pour des captures identiques d'une exécution à l'autre.
+      if (!options.reducedMotion) animateCube(cube, frozen ? 0 : now);
       renderer.render(scene, iso.camera);
     },
     setCameraPreset(preset) {

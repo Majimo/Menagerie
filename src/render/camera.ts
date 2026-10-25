@@ -4,8 +4,8 @@ import { OrthographicCamera, Vector3 } from 'three';
 
 export type CameraPreset = 'far' | 'mid' | 'close';
 
-/** Hauteur visible du monde, en tuiles, pour chaque niveau de zoom. */
-const VIEW_HEIGHT: Record<CameraPreset, number> = { far: 40, mid: 14, close: 6 };
+/** Étendue visible du monde, en tuiles, sur la plus petite dimension de l'écran (portrait comme paysage). */
+const VIEW_SIZE: Record<CameraPreset, number> = { far: 40, mid: 14, close: 6 };
 
 const ELEVATION = Math.atan(1 / Math.SQRT2);
 const AZIMUTH = Math.PI / 4;
@@ -20,11 +20,12 @@ export interface IsoCamera {
 export function createIsoCamera(): IsoCamera {
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
   const target = new Vector3();
-  let viewHeight = VIEW_HEIGHT.mid;
+  let viewSize = VIEW_SIZE.mid;
   let aspect = 1;
 
   function updateProjection(): void {
-    const halfH = viewHeight / 2;
+    const halfMin = viewSize / 2;
+    const halfH = aspect >= 1 ? halfMin : halfMin / aspect;
     camera.left = -halfH * aspect;
     camera.right = halfH * aspect;
     camera.top = halfH;
@@ -52,7 +53,7 @@ export function createIsoCamera(): IsoCamera {
       updateProjection();
     },
     setPreset(preset, newTarget) {
-      viewHeight = VIEW_HEIGHT[preset];
+      viewSize = VIEW_SIZE[preset];
       if (newTarget) target.copy(newTarget);
       place();
       updateProjection();
