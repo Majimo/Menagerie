@@ -6,7 +6,7 @@ import type { ScenarioName } from './scenarios';
 // Captures pour la revue visuelle : artifacts/screenshots/<iteration>/<scenario>_<viewport>_<zoom>.png.
 // Ce ne sont pas des tests pixel à pixel : elles sont ouvertes et revues avec la grille de docs/09.
 
-const SCENARIOS: ScenarioName[] = ['empty-map', 'first-enclosure'];
+const SCENARIOS: ScenarioName[] = ['empty-map', 'first-enclosure', 'full-map'];
 const OUT_DIR = `artifacts/screenshots/${ITERATION}`;
 
 async function nextFrames(page: Page): Promise<void> {
@@ -69,3 +69,17 @@ for (const deficiency of ['achromatopsia', 'deuteranopia'] as const) {
     });
   });
 }
+
+test('capture après un quart de tour de caméra @shots', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'Une seule taille suffit');
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'first-enclosure' });
+  await page.evaluate(() => window.__game?.freezeTime());
+  await page.getByRole('button', { name: 'Tourner la vue à droite' }).click();
+  await page.evaluate(() => {
+    window.__game?.previewTool('path', { x: 13, y: 42 }, { x: 24, y: 42 });
+    window.__game?.setCamera('mid');
+  });
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/first-enclosure-rotated_${testInfo.project.name}_mid.png` });
+});
