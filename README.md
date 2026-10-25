@@ -65,7 +65,7 @@ la vérifie et la clôture. On peut aussi cibler une itération : `/jalon-suivan
 - [x] Itération 0 : setup
 - [x] Itération 1 : monde, caméra, construction
 - [x] Itération 2 : animaux
-- [ ] Itération 3 : visiteurs et économie
+- [x] Itération 3 : visiteurs et économie
 - [ ] Itération 4 : boucle de jeu, équilibrage, sauvegarde
 
 ## Licences des assets

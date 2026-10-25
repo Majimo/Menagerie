@@ -98,13 +98,13 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 - Bulles d'humeur et éclats de joie.
 
 **Critères d'acceptation**
-- [ ] On **voit** des visiteurs s'arrêter devant les enclos et réagir aux animaux.
-- [ ] Un zoo sans chemin vers un enclos n'attire pas de visiteurs vers lui ; l'UI signale le problème.
-- [ ] Un prix de billet trop élevé réduit nettement les arrivées.
-- [ ] Les revenus et dépenses du jour sont détaillés dans un bilan.
-- [ ] Tests : pathfinding, machine à états, calcul de revenus, note du zoo, déterminisme avec visiteurs.
-- [ ] Revue visuelle : scénarios `busy-day` et `crisis` capturés ; adultes et enfants distincts, foule variée et répartie ; problème « visiteurs bloqués » ou « déficit » repérable en moins de 3 secondes ; `prefers-reduced-motion` respecté.
-- [ ] 60 fps avec ~150 visiteurs et ~40 animaux (sinon, noter la cause dans `docs/08-decisions.md`).
+- [x] On **voit** des visiteurs s'arrêter devant les enclos et réagir aux animaux.
+- [x] Un zoo sans chemin vers un enclos n'attire pas de visiteurs vers lui ; l'UI signale le problème.
+- [x] Un prix de billet trop élevé réduit nettement les arrivées.
+- [x] Les revenus et dépenses du jour sont détaillés dans un bilan.
+- [x] Tests : pathfinding, machine à états, calcul de revenus, note du zoo, déterminisme avec visiteurs.
+- [x] Revue visuelle : scénarios `busy-day` et `crisis` capturés ; adultes et enfants distincts, foule variée et répartie ; problème « visiteurs bloqués » ou « déficit » repérable en moins de 3 secondes ; `prefers-reduced-motion` respecté.
+- [x] 60 fps avec ~150 visiteurs et ~40 animaux (sinon, noter la cause dans `docs/08-decisions.md`).
 
 **Prompt** : « Réalise l'itération 3. Commence par la logique de simulation et ses tests, puis le rendu des visiteurs. »
 

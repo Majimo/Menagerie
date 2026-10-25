@@ -111,9 +111,17 @@ Déclencheurs (voir tableau plus bas) :
 - Le score d'habitat est recalculé à chaque tick pour chaque couple (enclos, espèce) : à mettre en cache par enclos
   si le profilage le montre.
 - Une clôture démolie laisse l'animal « hors enclos » sur place (immobile, bien-être cible 0) : pas d'évasion au POC.
-- Le nourrisseur est gratuit à l'usage : son coût de nourriture journalier arrive avec l'économie (itération 3).
+- Coût de nourriture des animaux forfaitaire par espèce et par jour, qu'il y ait un nourrisseur ou non (itération 3).
 - Le panneau d'inspection se reconstruit (4 fois par seconde au plus) quand son contenu change : suffisant au POC,
   à revoir avec un petit framework d'UI.
+
+- Visiteurs (itération 3) : pas de collision ni d'évitement entre visiteurs ; cache A* purgé en entier à chaque changement du
+  monde et vidé au-delà de 4 000 trajets ; le réseau des visiteurs est recalculé entièrement à chaque construction.
+- Rythme : journée de 1 200 ticks pour une marche de 0,2 tuile/tick : sur une grande carte, la visite est surtout de la marche.
+  À revoir avec la taille de carte et la durée d'une journée (itération 4 ou palier V0.2).
+- Économie : un zoo fréquenté est toujours très rentable (billets ≫ nourriture + entretien) ; à rééquilibrer à l'itération 4
+  (salaires en V0.3).
+- Alertes du zoo non annoncées vocalement à leur apparition (seul le bilan de minuit l'est).
 
 ## Questions ouvertes
 

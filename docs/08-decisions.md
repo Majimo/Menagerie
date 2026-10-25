@@ -186,6 +186,62 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
   Vitest qui vérifie que chaque scénario montre bien ce pour quoi il existe (états attendus, jour ou nuit).
 - **Conséquences** : un rééquilibrage qui casse une capture de référence échoue dès `npm run check`.
 
+## ADR-024 : Visiteurs au POC
+- **Statut** : accepté (itération 3) ; précise `02-regles-du-jeu-poc.md`
+- **Décision** :
+  - **Réseau des visiteurs** (`sim/world/visitorNetwork.ts`) : chemins hors enclos reliés à l'entrée, zones d'observation (chemins
+    qui longent un enclos), accès aux stands de snacks, tuiles d'où l'on rejoint la sortie. Donnée dérivée, recalculée quand
+    `world.revision` change (chaque commande de construction, chaque détection d'enclos), jamais stockée dans l'état.
+  - **Pathfinding séparé de l'IA** : `visitorAI` pose une demande (`pathStatus: 'pending'`), le système `pathfinding` la traite
+    par A* avec un budget de 24 recherches par tick (les trajets en cache ne comptent pas) ; le cache est purgé à chaque
+    changement du monde.
+  - **Arrivées** seulement s'il y a un animal vivant visible depuis le réseau **et** si la sortie est reliée à l'entrée : un zoo
+    vide ou sans issue n'accueille personne (et le signale). Un enclos qu'aucun chemin ne longe n'est jamais choisi.
+  - **Visiteur bloqué** = ne peut plus rejoindre la sortie (chemin coupé entre lui et elle), pas seulement « une recherche a
+    échoué ». Après 300 ticks sans trajet, il abandonne (disparaît, satisfaction ≤ 10).
+  - **Horaires** : arrivées de 8 h à 17 h, départ général à 19 h (avant la nuit visuelle de 20 h). Marche à 0,2 tuile/tick
+    (adulte) et 0,18 (enfant) : à 0,1, rejoindre le fond d'une carte de 48 tuiles prenait 4 heures de jeu.
+  - Billet enfant à moitié prix ; l'intérêt d'un enclos mêle `interest` et `cuteness` (l'enfant compte surtout la seconde).
+- **Conséquences** : déterministe (PRNG seedé, itérations par id croissant) ; test de déterminisme avec visiteurs. Pas de
+  collision entre visiteurs ; le décalage latéral de la foule est un effet de rendu (voir ADR-026).
+
+## ADR-025 : Économie et note du zoo
+- **Statut** : accepté (itération 3) ; valeurs à rééquilibrer à l'itération 4
+- **Décision** :
+  - Recettes inscrites au fil de la journée (billet à l'arrivée, snack au stand, marge de 60 % arrondie), dépenses de
+    construction et d'achat d'animaux inscrites par la commande, nourriture (`foodCostPerDay` par espèce) et entretien (1 % de
+    la valeur de construction) prélevés **à minuit**. Le bilan (`DayLedger`) du jour est clos à minuit et gardé 7 jours.
+  - Arrivées par jour = 160 × (note / 3) × f(prix) × (0,4 + 0,6 × diversité). Prix juste = 8 + 6 × note ; f(prix) = 1 − 1,6 ×
+    (prix − juste) / juste, borné à [0,03 ; 1,3]. À 50 pour un zoo à 3 étoiles, les arrivées tombent à quelques-unes.
+  - Note = 1 + 4 × (0,4 × bien-être + 0,4 × satisfaction 7 jours + 0,2 × diversité) − 0,4 par mort de moins de 7 jours,
+    bornée à [1, 5], recalculée tous les 10 ticks. Sans visiteur reparti, satisfaction supposée à 50.
+- **Conséquences** : avec ces valeurs, un zoo qui reçoit du monde est très rentable ; l'argent ne devient négatif que si les
+  visiteurs ne viennent pas. Le scénario `crisis` le montre avec un billet à 50.
+
+## ADR-026 : Rendu des visiteurs par parties instanciées
+- **Statut** : accepté (itération 3) ; s'écarte d'ADR-009 pour les visiteurs
+- **Décision** : un visiteur procédural est fait de 7 parties (jambes, torse, bras, tête, cheveux ou casquette) ; chaque partie
+  est un `InstancedMesh` par gabarit, teinté par instance (palettes de hauts, bas, peaux, coiffures, choisies par hachage de
+  l'id). Poses `walk`, `idle`, `watch` (montrer du doigt, mains sur la clôture, appareil photo) et `eat` calculées par
+  matrices, sans `AnimationMixer`. Le modèle passe par le registre d'assets (`visitor.adult`, `visitor.child`), avec repli
+  sur le corps procédural. Bulles d'humeur et éclats de joie en sprites ; pas de particules ni d'oscillation en mouvement réduit.
+  Zones d'observation marquées par une planche sur le chemin, le long de la clôture.
+- **Mesure** : `busy-day` à 1920×1080, Chromium avec GPU (ANGLE Metal, Apple M3 Pro), 218 visiteurs et 40 animaux, temps qui
+  avance : frame moyenne 3,6 ms en vue éloignée (p95 3,7 ms), soit une large marge sous les 16,7 ms de 60 fps.
+- **Conséquences** : 14 draw calls pour toute la foule. Un futur modèle glTF animé (skinned) ne s'instancierait pas ainsi :
+  il faudra une animation par texture de vertex (déjà prévue en V0.6).
+
+## ADR-027 : Interface de l'économie et des alertes
+- **Statut** : accepté (itération 3)
+- **Décision** : note et visiteurs présents s'affichent à côté de l'argent, dans un bouton qui ouvre le panneau Économie (dans
+  l'inspecteur : note détaillée, prix du billet, arrivées prévues, bilan du jour et de la veille). Le prix se règle par
+  boutons −5, −1, +1, +5 (pas de curseur : le panneau se reconstruit et casserait un glisser) ; le prix est relu au clic.
+  Les problèmes (visiteurs bloqués, argent négatif ou déficit, sortie coupée, enclos sans chemin, visiteurs affamés sans
+  stand) forment un bandeau de puces cliquables en haut à gauche (triangle, contour rouge, texte court, détail en bulle
+  d'aide). Sur écran étroit, un panneau ouvert masque ce bandeau. Le bilan est annoncé à minuit dans la zone `aria-live`.
+- **Conséquences** : un problème se repère en moins de 3 secondes ; les alertes ne sont pas annoncées vocalement à leur
+  apparition (seul le bilan l'est), à revoir avec les annonces « Faillite proche » de l'itération 4.
+
 ---
 
 ## Journal des playtests
