@@ -4,17 +4,23 @@ import {
   DirectionalLight,
   HemisphereLight,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   PCFShadowMap,
   PlaneGeometry,
   Scene,
   WebGLRenderer,
 } from 'three';
-import type { GameState, World } from '../sim/state';
+import type { AnimalId, GameState, World } from '../sim/state';
+import { timeOfDay } from '../sim/time';
 import { type CameraPreset, createIsoCamera, type IsoCamera } from './camera';
+import { applyDaylight, type DaylightRig } from './daylight';
 import { palette } from './palette';
 import { type GroundPoint, pickGround, worldToClient } from './picking';
 import { createTerrain } from './terrain';
+import { createAnimalView } from './views/animalView';
+import { createBuildingView } from './views/buildingView';
+import { createEnclosureBadgeView } from './views/enclosureBadgeView';
 import { createFenceView } from './views/fenceView';
 import { createGateView } from './views/gateView';
 import { createPreviewView, type Preview } from './views/previewView';
@@ -26,12 +32,22 @@ export interface RendererOptions {
   reducedMotion: boolean;
 }
 
+export interface RenderFrame {
+  preview: Preview;
+  now: number;
+  /** Fraction du tick suivant déjà écoulée, pour interpoler les entités. */
+  alpha: number;
+  selectedAnimal: AnimalId | null;
+}
+
 export interface GameRenderer {
   readonly camera: IsoCamera;
-  render(state: Readonly<GameState>, preview: Preview, now: number): void;
+  render(state: Readonly<GameState>, frame: RenderFrame): void;
   setCameraPreset(preset: CameraPreset, target?: GroundPoint): void;
   /** Fige les animations décoratives (captures déterministes). */
   setFrozen(frozen: boolean): void;
+  /** Test de silhouette (docs/04) : animaux en noir sur fond uni, tout le reste masqué. */
+  setSilhouette(on: boolean): void;
   /** Point du sol sous un point écran (coordonnées client). */
   pick(clientX: number, clientY: number): GroundPoint | null;
   /** Position écran (coordonnées client) d'un point du sol. */
@@ -54,17 +70,40 @@ export function createRenderer(
 
   const scene = new Scene();
   scene.background = new Color(SKY);
-  addLights(scene, world);
-  scene.add(createSurround(world));
+  const daylight = addLights(scene, world);
+  const surround = createSurround(world);
+  scene.add(surround);
 
   const terrain = createTerrain(world);
   const fences = createFenceView(world);
   const gates = createGateView(world);
   const preview = createPreviewView(world);
-  scene.add(terrain.group, fences.mesh, gates.group, preview.group);
+  const buildings = createBuildingView();
+  const animals = createAnimalView();
+  const badges = createEnclosureBadgeView();
+  scene.add(
+    terrain.group,
+    fences.mesh,
+    gates.group,
+    buildings.group,
+    animals.group,
+    badges.group,
+    preview.group,
+  );
 
   const iso = createIsoCamera(world);
   let frozen = false;
+  let silhouette = false;
+  const silhouetteMaterial = new MeshBasicMaterial({ color: 0x000000 });
+  const scenery = [
+    surround,
+    terrain.group,
+    fences.mesh,
+    gates.group,
+    buildings.group,
+    badges.group,
+    preview.group,
+  ];
   let lastFrame = -1;
 
   function resize(): void {
@@ -78,13 +117,28 @@ export function createRenderer(
 
   return {
     camera: iso,
-    render(state, currentPreview, now) {
+    render(state, frame) {
+      const { now } = frame;
       const delta = lastFrame < 0 ? 0 : now - lastFrame;
       lastFrame = now;
       iso.update(delta, options.reducedMotion || frozen);
+      if (!silhouette) applyDaylight(daylight, timeOfDay(state.tick).hour);
       terrain.update(state.world);
       fences.update(state.world);
-      preview.update(state.world, state.enclosures, currentPreview, iso.quarterTurns);
+      buildings.update(state.buildings);
+      animals.update({
+        animals: state.animals,
+        // Captures figées : pas d'interpolation, la position est celle du dernier tick.
+        alpha: frozen ? 1 : frame.alpha,
+        now,
+        deltaMs: delta,
+        worldPerPixel: iso.worldPerPixel,
+        animate: !(options.reducedMotion || frozen),
+        selected: frame.selectedAnimal,
+        silhouette,
+      });
+      badges.update(state, iso.worldPerPixel);
+      preview.update(state.world, state.enclosures, frame.preview, iso.quarterTurns);
       gates.setWorldPerPixel(iso.worldPerPixel);
       renderer.render(scene, iso.camera);
     },
@@ -94,13 +148,20 @@ export function createRenderer(
     setFrozen(value) {
       frozen = value;
     },
+    setSilhouette(on) {
+      silhouette = on;
+      for (const object of scenery) object.visible = !on;
+      scene.overrideMaterial = on ? silhouetteMaterial : null;
+      if (on) (scene.background as Color).set(0xffffff);
+    },
     pick: (clientX, clientY) => pickGround(iso.camera, canvas, clientX, clientY),
     toClient: (point) => worldToClient(iso.camera, canvas, { x: point.x, y: 0, z: point.z }),
   };
 }
 
-function addLights(scene: Scene, world: Readonly<World>): void {
-  scene.add(new HemisphereLight(0xfff4dc, palette.forest, 1.2));
+function addLights(scene: Scene, world: Readonly<World>): DaylightRig {
+  const hemisphere = new HemisphereLight(0xfff4dc, palette.forest, 1.2);
+  scene.add(hemisphere);
   scene.add(new AmbientLight(0xffffff, 0.25));
   const center = { x: world.width / 2, z: world.height / 2 };
   const sun = new DirectionalLight(0xfff0d0, 2.2);
@@ -117,6 +178,7 @@ function addLights(scene: Scene, world: Readonly<World>): void {
   sun.shadow.bias = -0.0005;
   sun.shadow.radius = 3;
   scene.add(sun, sun.target);
+  return { scene, hemisphere, sun, baseHemisphere: hemisphere.intensity, baseSun: sun.intensity };
 }
 
 function createSurround(world: Readonly<World>): Mesh {

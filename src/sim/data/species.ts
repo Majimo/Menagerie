@@ -92,7 +92,7 @@ export const SPECIES = {
     walkSpeed: 0.07,
     modelId: 'animal.panda',
     iconId: 'panda',
-    displayScale: 1,
+    displayScale: 1.15,
   },
 } as const satisfies Record<string, SpeciesDef>;
 
