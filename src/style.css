@@ -1,5 +1,8 @@
 :root {
   --ui-cream: #fff6e5;
+  --ui-cream-strong: #fbe9c8;
+  --ui-ink-soft: #5b5347;
+  --ui-scale: 1;
   --ui-ink: #2d2a24;
   --ui-accent: #3e8e5a;
   --ui-alert: #e4604b;
@@ -44,7 +47,7 @@ main {
 .debug-overlay {
   position: fixed;
   top: 8px;
-  left: 8px;
+  right: 8px;
   padding: 4px 8px;
   border-radius: 6px;
   background: rgb(45 42 36 / 80%);
@@ -54,4 +57,293 @@ main {
     Menlo,
     monospace;
   pointer-events: none;
+}
+
+/* --- Interface de jeu ------------------------------------------------------------------------------ */
+
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-size: calc(16px * var(--ui-scale));
+}
+
+/* Info-bulle et message ne doivent pas intercepter le pointeur destiné au canvas. */
+#ui > :not(.tooltip, .toast) {
+  pointer-events: auto;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+button {
+  font: inherit;
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--ui-ink);
+  outline-offset: 2px;
+}
+
+.panel,
+.money,
+.toolbar,
+.biome-picker,
+.camera-controls {
+  background: var(--ui-cream);
+  border: 2px solid rgb(45 42 36 / 15%);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgb(45 42 36 / 18%);
+}
+
+.money {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 1.15em;
+  font-variant-numeric: tabular-nums;
+}
+
+.money .icon {
+  color: #8a6a12;
+}
+
+.money-delta {
+  font-size: 0.85em;
+  opacity: 0;
+}
+
+.money-delta[data-sign="loss"] {
+  color: #a8321f;
+}
+
+.money-delta[data-sign="gain"] {
+  color: #2b6b42;
+}
+
+.money-delta.visible {
+  opacity: 1;
+  animation: money-pop 1.6s ease-out forwards;
+}
+
+@keyframes money-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+}
+
+.tool-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 72px;
+  min-height: 60px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.tool-button:hover {
+  background: var(--ui-cream-strong);
+}
+
+/* Outil actif : fond plein, bord épais et soulignement, pas seulement une couleur. */
+.tool-button[aria-pressed="true"] {
+  background: var(--ui-accent);
+  border-color: var(--ui-ink);
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.biome-picker {
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.biome-picker[hidden] {
+  display: none;
+}
+
+.biome-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 10px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.biome-button[aria-pressed="true"] {
+  border-color: var(--ui-ink);
+  background: var(--ui-cream-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgb(45 42 36 / 45%);
+}
+
+.swatch-savanna {
+  background: #c9b26b;
+}
+.swatch-forest {
+  background: #4f7a4a;
+}
+.swatch-grass {
+  background: #7db35b;
+}
+.swatch-sand {
+  background: #e3d3a1;
+}
+
+.camera-controls {
+  position: fixed;
+  right: 12px;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)));
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  gap: 4px;
+  padding: 4px;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.icon-button:hover {
+  background: var(--ui-cream-strong);
+}
+
+.toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(90vw, 480px);
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px solid #a8321f;
+  background: #fff1ec;
+  color: #6e1e10;
+  font-weight: 600;
+  text-align: center;
+  opacity: 0;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+.toast.visible::before {
+  content: "✗ ";
+}
+
+.tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgb(45 42 36 / 92%);
+  color: var(--ui-cream);
+  font-size: 0.85em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tooltip[data-tone="error"],
+.tooltip [data-tone="error"] {
+  color: #ffb4a6;
+}
+
+.tooltip [data-tone="ok"] {
+  color: #bfe6c9;
+}
+
+/* Petit écran : la barre d'outils au pouce, la caméra au-dessus à droite, l'argent en haut. */
+@media (max-width: 600px) {
+  .tool-button {
+    min-width: 64px;
+  }
+
+  .camera-controls {
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px);
+  }
+
+  .biome-picker {
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px);
+    left: 12px;
+    transform: none;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 132px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .money-delta.visible {
+    animation: none;
+  }
 }

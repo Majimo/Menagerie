@@ -1,0 +1,27 @@
+// Icônes SVG maison (traits simples), toujours accompagnées d'un texte : décoratives pour les lecteurs d'écran.
+
+const PATHS = {
+  path: 'M5 21 9 3M19 21 15 3M12 5v2M12 10.5v3M12 17v3',
+  fence: 'M5 4v17M12 4v17M19 4v17M3 9h18M3 15h18',
+  biome: 'M5 19C5 11 11 5 19 5c0 8-6 14-14 14ZM5 19l8-8',
+  demolish: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
+  rotateLeft: 'M4 12a8 8 0 1 0 2.4-5.7L4 8.6M4 3.5v5.1h5.1',
+  rotateRight: 'M20 12a8 8 0 1 1-2.4-5.7L20 8.6M20 3.5v5.1h-5.1',
+  zoomIn: 'M5 12h14M12 5v14',
+  zoomOut: 'M5 12h14',
+  coin: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 7v10M9.5 9.5c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1.1 1.8-2.5 2.2-2.5 1-2.5 2.3 1.1 2 2.5 2 2.5-.8 2.5-2',
+} as const;
+
+export type IconId = keyof typeof PATHS;
+
+export function icon(id: IconId): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.classList.add('icon');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', PATHS[id]);
+  svg.append(path);
+  return svg;
+}
