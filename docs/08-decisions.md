@@ -74,6 +74,37 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
   lisibilité ludique, interface), tests axe-core pour le DOM, simulation de daltonisme pour le rendu 3D.
 - **Conséquences** : un peu d'outillage en itération 0 ; revue visuelle obligatoire en fin d'itération ; le « fun » reste tranché par un humain.
 
+
+## ADR-011 : Versions de l'outillage et garde d'architecture à trois niveaux
+- **Statut** : accepté (itération 0)
+- **Contexte** : mise en place du projet en octobre 2026 ; la règle n° 1 (sim pure) doit être vérifiée automatiquement.
+- **Décision** : Vite 8 (Rolldown), TypeScript 7, Vitest 5, Biome 2.6, Playwright 1.64, three r186. Trois configurations
+  TypeScript : `tsconfig.json` (navigateur), `tsconfig.sim.json` (`src/sim/` compilé **sans lib DOM**),
+  `tsconfig.node.json` (configs et tests). Garde de `src/sim/` à trois niveaux : Biome (`noRestrictedImports`,
+  `noRestrictedGlobals`), tsc sans DOM, test Vitest `tests/sim/architecture.test.ts` (three, DOM, `Math.random`, `Date.now`).
+- **Conséquences** : une violation casse `npm run check`. `@types/node` ajouté pour l'outillage uniquement.
+  three r186 a retiré `PCFSoftShadowMap` : on utilise `PCFShadowMap`.
+
+## ADR-012 : Biome ne formate pas le Markdown
+- **Statut** : accepté (itération 0)
+- **Contexte** : Biome 2.6 formate aussi le Markdown. Il a transformé une ligne de continuation commençant par `+`
+  en élément de liste (changement de sens dans `CLAUDE.md`) et réaligné tous les tableaux.
+- **Décision** : `**/*.md` exclu de Biome. La documentation reste écrite à la main.
+
+## ADR-013 : API de debug et scénarios de test
+- **Statut** : accepté (itération 0)
+- **Décision** : `window.__game` vit dans `src/debug/gameApi.ts`, chargé par `import()` derrière `import.meta.env.DEV`
+  (absent du build de production, vérifié). Les scénarios seedés sont définis dans `tests/e2e/scenarios/` et importés par
+  cette API. Les tests Playwright tournent contre le serveur de dev ; les captures se prennent sans `?debug`
+  (l'overlay de FPS n'est pas l'interface du joueur) et `freezeTime()` ramène les animations décoratives à t = 0.
+- **Conséquences** : captures reproductibles ; le build de production n'est pas couvert par les tests e2e (vérifié à la main).
+
+## ADR-014 : Hébergement sur GitHub Pages
+- **Statut** : proposé, à confirmer à la mise en ligne
+- **Décision** : workflow `.github/workflows/deploy.yml` (check, build, publication) ; `base` fixé par la variable
+  `BASE_PATH` (`/<nom-du-repo>/` en CI, `/` par défaut) ; Three.js isolé dans un chunk `three` (~130 ko gzip).
+- **Conséquences** : bascule vers Cloudflare Pages ou Netlify possible sans changer le code (seulement `BASE_PATH`).
+
 ---
 
 ## Journal des playtests

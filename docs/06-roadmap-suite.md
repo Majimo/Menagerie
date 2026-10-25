@@ -98,6 +98,7 @@ Déclencheurs (voir tableau plus bas) :
 - Pas de gardiens : les nourrisseurs sont automatiques.
 - UI en DOM natif : acceptable jusqu'à une UI riche, puis envisager un petit framework (Preact, Lit).
 - Équilibrage par scénario scripté unique : prévoir un banc de simulations multi-scénarios.
+- Tests e2e contre le serveur de dev seulement : ajouter un passage sur le build de production (`vite preview`) en CI.
 
 ## Questions ouvertes
 
