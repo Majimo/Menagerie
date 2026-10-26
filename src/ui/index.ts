@@ -76,19 +76,23 @@ export function createGameUi({
   });
   zooButton.append(icon('list'), h('span', { text: t('zoo.button') }));
   const screens = createScreens(root, actions);
-  const menuButton = h(
-    'button',
-    {
-      className: 'zoo-button',
-      attrs: { 'data-testid': 'menu-button', 'aria-label': t('menu.button'), title: t('menu.button') },
-      onClick: () => screens.showMenu(),
-    },
-    [icon('menu'), h('span', { text: t('menu.button') })],
+  // Menu de la partie : un bouton à part, en haut à gauche, devant l'argent.
+  root.prepend(
+    h(
+      'button',
+      {
+        className: 'icon-button menu-button',
+        attrs: { 'data-testid': 'menu-button', 'aria-label': t('menu.button'), title: t('menu.button') },
+        onClick: () => screens.showMenu(),
+      },
+      [icon('menu')],
+    ),
   );
-  const clock = createTimeControls(root, speed, [zooButton, menuButton]);
+  const clock = createTimeControls(root, speed, [zooButton]);
   createCameraControls(root, renderer.camera);
   createToolbar(root, tools);
   const tutorial = createTutorial(root);
+  placeBelowTopBars(column, root);
   const tooltip = createTooltip(root);
   const notices = createNotices(toast);
   let lastState: Readonly<GameState> | null = null;
@@ -157,4 +161,27 @@ function tooltipLines(state: Readonly<GameState>, tools: ToolController): Toolti
   const refused = evaluation.commands.find(({ result }) => !result.ok)?.result;
   if (refused && !refused.ok) lines.push({ text: errorText(refused), tone: 'error' });
   return lines;
+}
+
+/**
+ * Place la colonne de gauche juste sous les barres du haut qui la surplombent (argent ; horloge sur écran étroit,
+ * où elle passe sous l'argent et peut aller à la ligne). Mesuré : suit l'échelle d'interface et la largeur.
+ */
+function placeBelowTopBars(column: HTMLElement, root: HTMLElement): void {
+  const bars = ['.money', '.menu-button', '.time-controls']
+    .map((selector) => root.querySelector<HTMLElement>(selector))
+    .filter((el): el is HTMLElement => el !== null);
+  const place = () => {
+    const left = column.getBoundingClientRect().left;
+    let bottom = 0;
+    for (const bar of bars) {
+      const box = bar.getBoundingClientRect();
+      if (box.left <= left + 200) bottom = Math.max(bottom, box.bottom);
+    }
+    column.style.top = `${Math.round(bottom + 8)}px`;
+  };
+  const observer = new ResizeObserver(place);
+  for (const bar of bars) observer.observe(bar);
+  window.addEventListener('resize', place);
+  place();
 }

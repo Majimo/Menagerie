@@ -11,6 +11,8 @@ const PORT = 5199;
 export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: 'test-results',
+  // Références de la régression visuelle (versionnées), propres à la plateforme qui les a produites.
+  snapshotPathTemplate: '{testDir}/__screenshots__/{platform}/{arg}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

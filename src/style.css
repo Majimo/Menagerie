@@ -111,7 +111,7 @@ button:focus-visible {
 .money {
   position: fixed;
   top: 12px;
-  left: 12px;
+  left: 64px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -609,6 +609,9 @@ button:focus-visible {
   .toolbar {
     gap: 2px;
     padding: 4px;
+    /* Grande échelle d'interface : la barre défile plutôt que de sortir de l'écran. */
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
   }
   .tool-button {
     min-width: 52px;
@@ -626,9 +629,11 @@ button:focus-visible {
     bottom: calc(max(12px, env(safe-area-inset-bottom)) + 76px);
   }
   .time-controls {
-    top: 64px;
+    top: calc(20px + 44px * var(--ui-scale));
     left: 12px;
     right: auto;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 24px);
   }
   .clock {
     min-width: 0;
@@ -638,7 +643,7 @@ button:focus-visible {
     display: none;
   }
   .inspector {
-    top: 120px;
+    top: calc(32px + 88px * var(--ui-scale));
     left: 12px;
     right: 12px;
     width: auto;
@@ -818,6 +823,19 @@ button:focus-visible {
 
 /* --- Itération 4 : objectifs, tutoriel, écrans ------------------------------------------------------ */
 
+/* Bouton du menu de la partie, devant l'argent. */
+.menu-button {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  width: 44px;
+  height: 44px;
+  background: var(--ui-cream);
+  border: 2px solid rgb(45 42 36 / 15%);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(45 42 36 / 18%);
+}
+
 /* Colonne de gauche, sous l'argent : objectif en cours puis alertes. Les vides laissent passer le pointeur. */
 #ui > .hud-left {
   position: fixed;
@@ -935,7 +953,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--ui-accent);
+  color: #2b6b42;
   font-weight: 700;
   font-size: 0.85em;
 }
@@ -964,8 +982,8 @@ button:focus-visible {
 }
 .tutorial-next,
 .screen-button.primary {
-  border-color: #2b6b42;
-  background: var(--ui-accent);
+  border-color: #1f4f31;
+  background: #2b6b42;
   color: #fff;
 }
 .tutorial-skip {
@@ -1051,7 +1069,29 @@ button:focus-visible {
 
 @media (max-width: 600px) {
   #ui > .hud-left {
-    top: 116px;
+    right: 12px;
+    align-items: stretch;
+  }
+  /* Une seule rangée d'alertes qui défile : le centre de l'écran (le zoo) reste dégagé. */
+  .alerts {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .alert-chip {
+    flex: none;
+    white-space: nowrap;
+  }
+  .objectives-summary {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .objectives-text {
+    min-width: 0;
+  }
+  .objectives-detail {
+    display: none;
   }
   .objectives-toggle {
     min-height: 44px;

@@ -55,6 +55,9 @@ export function createScreens(parent: HTMLElement, actions: ScreenActions): Scre
     if (!el.open) el.showModal();
   };
   const close = (el: HTMLDialogElement) => {
+    // Le focus ne doit pas rester sur un bouton de l'écran fermé : l'espace l'activerait en douce.
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && el.contains(focused)) focused.blur();
     if (el.open) el.close();
   };
   const message = () => h('p', { className: 'screen-message', attrs: { role: 'status' } });

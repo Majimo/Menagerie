@@ -18,8 +18,8 @@ test('le panneau Économie règle le prix du billet et annonce l’effet sur les
   // Clics rapides : ils s'additionnent même si le panneau n'est pas encore rafraîchi.
   for (let i = 0; i < 5; i++)
     await page.getByRole('button', { name: 'Augmenter le prix du billet de 5' }).click();
-  await expect(page.getByTestId('ticket-price')).toContainText('45 par adulte, 23 par enfant');
-  expect((await state(page))?.ticketPrice).toBe(45);
+  await expect(page.getByTestId('ticket-price')).toContainText('40 par adulte, 20 par enfant');
+  expect((await state(page))?.ticketPrice).toBe(40);
   await expect.poll(() => expectedVisitors(page)).toBeLessThan(before / 2);
   await expect(page.getByTestId('inspector')).toContainText('Trop cher');
 });

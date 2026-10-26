@@ -15,6 +15,8 @@ const SCENARIOS: ScenarioName[] = [
   'busy-day',
   'snack-time',
   'crisis',
+  'rest-stop',
+  'bankrupt',
 ];
 const OUT_DIR = `artifacts/screenshots/${ITERATION}`;
 
@@ -244,3 +246,38 @@ for (const deficiency of ['protanopia', 'deuteranopia', 'tritanopia', 'achromato
     }
   });
 }
+
+test('captures de l’écran titre, du tutoriel, des objectifs et du menu @shots', async ({
+  page,
+}, testInfo) => {
+  mkdirSync(OUT_DIR, { recursive: true });
+  const name = testInfo.project.name;
+  await page.goto('/');
+  await page.waitForFunction(() => window.__game !== undefined);
+  await page.evaluate(() => window.__game?.ready());
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/title_${name}.png` });
+  await page.getByRole('button', { name: 'Nouvelle partie' }).click();
+  await page.getByTestId('tutorial').waitFor();
+  await page.keyboard.press(' ');
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/tutorial_${name}.png` });
+  await page.getByTestId('objectives').click();
+  await page.screenshot({ path: `${OUT_DIR}/objectives_${name}.png` });
+  await page.getByTestId('menu-button').click();
+  await page.getByRole('dialog', { name: 'Menu' }).waitFor();
+  await page.screenshot({ path: `${OUT_DIR}/menu_${name}.png` });
+});
+
+test('captures à l’échelle d’interface 150 % @shots', async ({ page }, testInfo) => {
+  mkdirSync(OUT_DIR, { recursive: true });
+  await openGame(page, { scenario: 'crisis' });
+  await page.evaluate(() => {
+    window.__game?.freezeTime();
+    window.__game?.advance(1200);
+    document.documentElement.style.setProperty('--ui-scale', '1.5');
+  });
+  await page.getByRole('button', { name: 'Biome' }).click();
+  await nextFrames(page);
+  await page.screenshot({ path: `${OUT_DIR}/ui-scale-150_${testInfo.project.name}.png` });
+});

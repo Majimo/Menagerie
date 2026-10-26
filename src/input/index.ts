@@ -130,6 +130,8 @@ export function attachInput(canvas: HTMLCanvasElement, intents: Intents): void {
 
   window.addEventListener('keydown', (event) => {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
+    // Un écran modal (titre, menu, fin) garde le clavier : Échap le ferme, l'espace active ses boutons.
+    if (document.querySelector('dialog[open]')) return;
     const key = event.key.toLowerCase();
     const actions: Record<string, () => void> = {
       escape: () => intents.cancel(),
