@@ -222,7 +222,7 @@ export function createInitialState(seed = 1): GameState {
     visitors: {},
     nextVisitorId: 1,
     stats: {
-      rating: 1 + 4 * balance.rating.weights.satisfaction * (balance.rating.defaultSatisfaction / 100),
+      rating: balance.rating.startRating,
       today: createLedger(1),
       history: [],
       deathTicks: [],

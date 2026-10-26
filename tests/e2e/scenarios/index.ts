@@ -18,6 +18,8 @@ export interface Scenario {
   seed: number;
   /** Argent de départ, s'il diffère de l'équilibrage (scénarios de démonstration). */
   money?: number;
+  /** Note de départ, pour un zoo de démonstration à la réputation déjà établie (la note monte lentement). */
+  rating?: number;
   commands: Command[];
   ticks: number;
   steps?: ScenarioStep[];
@@ -29,6 +31,7 @@ export interface Scenario {
 export function runScenario(scenario: Scenario): GameState {
   const state = createInitialState(scenario.seed);
   if (scenario.money !== undefined) state.money = scenario.money;
+  if (scenario.rating !== undefined) state.stats.rating = scenario.rating;
   for (const step of [{ commands: scenario.commands, ticks: scenario.ticks }, ...(scenario.steps ?? [])]) {
     for (const command of step.commands) dispatchCommand(state, command);
     for (let i = 0; i < step.ticks; i++) stepSimulation(state);
@@ -266,6 +269,7 @@ export const scenarios = {
   'busy-day': {
     seed: 5,
     money: 500_000,
+    rating: 4.2,
     commands: busyDay(),
     ticks: 270,
     focus: { x: 23, y: 31 },
@@ -277,6 +281,7 @@ export const scenarios = {
   'snack-time': {
     seed: 5,
     money: 500_000,
+    rating: 4.2,
     commands: busyDay(),
     ticks: 480,
     focus: { x: 23, y: 43 },

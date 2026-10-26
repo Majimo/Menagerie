@@ -11,7 +11,7 @@ describe('économie', () => {
   it('chaque arrivée paie son billet : plein tarif pour un adulte, moitié pour un enfant', () => {
     const state = createInitialState(3);
     buildVisitorZoo(state);
-    dispatchCommand(state, { type: 'SetTicketPrice', price: 25 });
+    dispatchCommand(state, { type: 'SetTicketPrice', price: 15 });
     const money = state.money;
     let expected = 0;
     for (let i = 0; i < 300; i++) {
@@ -19,7 +19,7 @@ describe('économie', () => {
       stepSimulation(state);
       for (let id = before; id < state.nextVisitorId; id++) {
         const kind = state.visitors[id]?.kind ?? 'adult';
-        expected += Math.round(25 * VISITOR_KINDS[kind].ticketRatio);
+        expected += Math.round(15 * VISITOR_KINDS[kind].ticketRatio);
       }
     }
     expect(state.stats.today.visitors).toBeGreaterThan(10);

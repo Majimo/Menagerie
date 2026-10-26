@@ -1,5 +1,6 @@
 // Équilibrage du jeu (coûts, durées, seuils) : aucun chiffre en dur dans les systèmes.
-// Valeurs de départ de docs/02-regles-du-jeu-poc.md, à équilibrer à l'itération 4.
+// Valeurs de docs/02-regles-du-jeu-poc.md, équilibrées à l'itération 4 avec les parties scriptées de
+// tests/sim/balance.test.ts (une bonne stratégie gagne, une mauvaise fait faillite).
 
 export const balance = {
   startingMoney: 50_000,
@@ -87,8 +88,8 @@ export const balance = {
     /** Plafond de visiteurs présents en même temps. */
     maxActive: 220,
     /** Prix juste du billet : `fairPriceBase + fairPricePerStar × note`. */
-    fairPriceBase: 8,
-    fairPricePerStar: 6,
+    fairPriceBase: 6,
+    fairPricePerStar: 4,
     /** Sensibilité au prix : chaque tranche de 100 % au-dessus du prix juste retire `priceSensitivity`. */
     priceSensitivity: 1.6,
     /** Facteur prix : borné dans [min, max] (un billet bon marché attire un peu plus). */
@@ -116,7 +117,7 @@ export const balance = {
     /** Satisfaction perdue par tick devant un enclos où un animal est mort ou très malheureux. */
     sadViewLossPerTick: 0.1,
     /** En dessous de ce bien-être moyen, la réaction est triste. */
-    sadWellbeingBelow: 35,
+    sadWellbeingBelow: 50,
     /** Durée d'affichage d'une réaction (éclat de joie, tristesse), en ticks. */
     reactionTicks: 25,
     /** Lassitude : intérêt multiplié par ce facteur pour chaque visite déjà faite du même enclos. */
@@ -137,7 +138,7 @@ export const balance = {
   },
   economy: {
     /** Prix du billet : défaut et bornes. */
-    ticketPrice: { default: 20, min: 5, max: 50 },
+    ticketPrice: { default: 15, min: 5, max: 50 },
     snackPrice: 8,
     /** Part du prix du snack qui revient au zoo. */
     snackMargin: 0.6,
@@ -147,6 +148,13 @@ export const balance = {
   rating: {
     /** Pondération de la note (somme = 1). */
     weights: { wellbeing: 0.4, satisfaction: 0.4, diversity: 0.2 },
+    /** Score pondéré en dessous duquel le zoo n'a qu'une étoile ; au-dessus, l'échelle va jusqu'à 5. */
+    scoreFloor: 0.32,
+    /** Note d'un zoo qui ouvre (curiosité du public) : elle rejoint ensuite la note visée. */
+    startRating: 2.5,
+    /** Vitesse à laquelle la note rejoint la note visée, en étoiles par jour (la réputation se perd plus vite). */
+    risePerDay: 0.6,
+    fallPerDay: 1.2,
     /** Satisfaction supposée quand aucun visiteur n'est encore reparti. */
     defaultSatisfaction: 50,
     /** Étoiles retirées par animal mort dans les `deathMemoryDays` derniers jours. */

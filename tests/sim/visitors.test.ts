@@ -213,7 +213,7 @@ describe('visiteurs : arrivées et choix des enclos', () => {
       stepSimulation(state);
       for (const visitor of Object.values(state.visitors)) targets.add(visitor.targetEnclosure);
     }
-    expect(state.nextVisitorId).toBeGreaterThan(20);
+    expect(state.nextVisitorId).toBeGreaterThan(10);
     expect(targets).not.toContain(lionEnclosure);
   });
 
@@ -225,7 +225,7 @@ describe('visiteurs : arrivées et choix des enclos', () => {
       runDays(state, 1);
       return state.stats.history[0]?.visitors ?? 0;
     };
-    const fair = arrivals(20);
+    const fair = arrivals(balance.economy.ticketPrice.default);
     const expensive = arrivals(50);
     expect(fair).toBeGreaterThan(30);
     expect(expensive).toBeLessThan(fair * 0.2);
