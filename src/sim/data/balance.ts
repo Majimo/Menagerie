@@ -151,8 +151,8 @@ export const balance = {
     everyTicks: 10,
   },
   pathfinding: {
-    /** Recherches A* par tick au plus ; les suivantes attendent le tick suivant. */
-    searchesPerTick: 24,
+    /** Demandes de trajet traitées par tick au plus (en cache ou non) ; les suivantes attendent le tick suivant. */
+    requestsPerTick: 40,
     /** Taille maximale du cache de trajets avant purge. */
     cacheSize: 4000,
   },

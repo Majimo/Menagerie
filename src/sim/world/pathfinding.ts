@@ -101,16 +101,12 @@ interface PathCache {
 
 const caches = new WeakMap<Readonly<GameState>, PathCache>();
 
-/**
- * Trajet avec cache : le résultat est partagé, il faut le copier avant de le consommer.
- * Sans `allowSearch`, renvoie `undefined` si le trajet n'est pas déjà en cache.
- */
+/** Trajet avec cache : le résultat est partagé, il faut le copier avant de le consommer. */
 export function cachedPath(
   state: Readonly<GameState>,
   start: number,
   goal: number,
-  allowSearch: boolean,
-): { path: readonly number[] | null; cached: boolean } | undefined {
+): { path: readonly number[] | null; cached: boolean } {
   const { world } = state;
   let cache = caches.get(state);
   if (!cache || cache.revision !== world.revision) {
@@ -120,7 +116,6 @@ export function cachedPath(
   const key = start * world.width * world.height + goal;
   const hit = cache.paths.get(key);
   if (hit !== undefined) return { path: hit, cached: true };
-  if (!allowSearch) return undefined;
   if (cache.paths.size >= balance.pathfinding.cacheSize) cache.paths.clear();
   const path = aStar(world, start, goal);
   cache.paths.set(key, path);

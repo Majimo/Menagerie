@@ -3,6 +3,7 @@ import { updateAnimalMovement } from './animalMovement';
 import { updateAnimalNeeds } from './animalNeeds';
 import { updateEconomy } from './economy';
 import { updateEnclosures } from './enclosures';
+import { updateObjectives } from './objectives';
 import { updatePathfinding } from './pathfinding';
 import { updateRating } from './rating';
 import { updateVisitorAI } from './visitorAI';
@@ -22,4 +23,5 @@ export const SYSTEMS: readonly System[] = [
   updatePathfinding,
   updateEconomy,
   updateRating,
+  updateObjectives,
 ];

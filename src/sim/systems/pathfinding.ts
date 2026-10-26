@@ -3,18 +3,17 @@ import type { GameState } from '../state';
 import { tileIndex } from '../world/grid';
 import { cachedPath } from '../world/pathfinding';
 
-// Système `pathfinding` : traite les demandes de trajet des visiteurs, dans la limite d'un budget de recherches
-// par tick. Les trajets en cache ne comptent pas ; les demandes en trop attendent le tick suivant.
+// Système `pathfinding` : traite les demandes de trajet des visiteurs, dans la limite d'un budget de demandes
+// par tick ; les demandes en trop attendent le tick suivant. Le budget compte aussi les trajets en cache : ainsi le
+// cache (non sauvegardé) ne change jamais le déroulement, et une partie rechargée se poursuit à l'identique.
 
 export function updatePathfinding(state: GameState): void {
-  let budget = balance.pathfinding.searchesPerTick;
+  let budget = balance.pathfinding.requestsPerTick;
   for (const visitor of Object.values(state.visitors)) {
     if (visitor.pathStatus !== 'pending') continue;
+    if (budget-- <= 0) return;
     const start = tileIndex(state.world, { x: Math.floor(visitor.x), y: Math.floor(visitor.y) });
-    const result = cachedPath(state, start, visitor.goal, budget > 0);
-    if (!result) continue;
-    if (!result.cached) budget -= 1;
-    const { path } = result;
+    const { path } = cachedPath(state, start, visitor.goal);
     visitor.path = path ? [...path] : [];
     visitor.pathStatus = path ? 'ready' : 'failed';
   }

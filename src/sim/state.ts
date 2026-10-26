@@ -1,5 +1,6 @@
 import { balance } from './data/balance';
 import type { BuildingKind } from './data/buildings';
+import { FIRST_STEPS } from './data/scenario';
 import type { SpeciesId } from './data/species';
 import { tileCode } from './data/terrain';
 import type { VisitorKind } from './data/visitors';
@@ -8,7 +9,7 @@ import { type TileCoord, tileIndex } from './world/grid';
 // État global de la simulation : de la donnée pure, sérialisable en JSON (règle d'architecture n° 4).
 // Il s'enrichit à chaque itération (animaux, visiteurs…).
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type EnclosureId = number;
 
@@ -168,6 +169,18 @@ export interface World {
   revision: number;
 }
 
+/** Avancement du scénario « Premiers pas » (data/scenario.ts). */
+export interface ScenarioProgress {
+  /** Tick d'obtention de chaque objectif, dans l'ordre des objectifs ; -1 tant qu'il n'est pas atteint. */
+  completedAt: number[];
+  /** Jours consécutifs terminés avec un argent négatif. */
+  debtDays: number;
+  /** Dernier jour dont la fin a été comptée. */
+  lastDayChecked: number;
+  /** `lost` : faillite, la partie est terminée. */
+  outcome: 'playing' | 'lost';
+}
+
 export interface GameState {
   saveVersion: number;
   seed: number;
@@ -186,6 +199,7 @@ export interface GameState {
   visitors: Record<VisitorId, Visitor>;
   nextVisitorId: VisitorId;
   stats: ZooStats;
+  scenario: ScenarioProgress;
 }
 
 export function createInitialState(seed = 1): GameState {
@@ -210,6 +224,12 @@ export function createInitialState(seed = 1): GameState {
       today: createLedger(1),
       history: [],
       deathTicks: [],
+    },
+    scenario: {
+      completedAt: FIRST_STEPS.objectives.map(() => -1),
+      debtDays: 0,
+      lastDayChecked: 0,
+      outcome: 'playing',
     },
   };
 }

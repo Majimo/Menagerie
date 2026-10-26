@@ -47,18 +47,21 @@ describe('pathfinding A* des visiteurs', () => {
   it('cache les trajets et les invalide quand le monde change', () => {
     const state = createInitialState(1);
     placePath(state, { x: 21, y: 46 }, { x: 21, y: 40 });
-    expect(cachedPath(state, at(21, 47), at(21, 40), true)?.cached).toBe(false);
-    expect(cachedPath(state, at(21, 47), at(21, 40), true)?.cached).toBe(true);
+    expect(cachedPath(state, at(21, 47), at(21, 40)).cached).toBe(false);
+    expect(cachedPath(state, at(21, 47), at(21, 40)).cached).toBe(true);
     dispatchCommand(state, { type: 'Demolish', target: { kind: 'tile', tile: { x: 21, y: 43 } } });
-    expect(cachedPath(state, at(21, 47), at(21, 40), false)).toBeUndefined();
-    expect(cachedPath(state, at(21, 47), at(21, 40), true)?.path).toBeNull();
+    const after = cachedPath(state, at(21, 47), at(21, 40));
+    expect(after.cached).toBe(false);
+    expect(after.path).toBeNull();
   });
 
-  it('respecte le budget de recherches par tick et traite le reste au tick suivant', () => {
+  it('respecte le budget de demandes par tick, cache compris, et traite le reste au tick suivant', () => {
     const state = createInitialState(1);
     buildVisitorZoo(state);
-    const goals = [...visitorNetwork(state).reachable];
-    expect(goals.length).toBeGreaterThan(balance.pathfinding.searchesPerTick);
+    const reachable = [...visitorNetwork(state).reachable];
+    // Chaque but deux fois : la seconde demande est en cache mais compte quand même.
+    const goals = [...reachable, ...reachable].slice(0, balance.pathfinding.requestsPerTick + 10);
+    expect(goals.length).toBe(balance.pathfinding.requestsPerTick + 10);
     const visitors = goals.map((goal) => {
       const visitor = createVisitor(state, 'adult', at(21, 47));
       visitor.goal = goal;
@@ -67,7 +70,7 @@ describe('pathfinding A* des visiteurs', () => {
     });
     updatePathfinding(state);
     const pending = () => visitors.filter((v) => v.pathStatus === 'pending').length;
-    expect(pending()).toBe(goals.length - balance.pathfinding.searchesPerTick);
+    expect(pending()).toBe(10);
     updatePathfinding(state);
     expect(pending()).toBe(0);
     expect(visitors.every((v) => v.pathStatus === 'ready')).toBe(true);
