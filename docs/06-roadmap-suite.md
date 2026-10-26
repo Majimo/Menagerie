@@ -119,9 +119,16 @@ Déclencheurs (voir tableau plus bas) :
   monde et vidé au-delà de 4 000 trajets ; le réseau des visiteurs est recalculé entièrement à chaque construction.
 - Rythme : journée de 1 200 ticks pour une marche de 0,2 tuile/tick : sur une grande carte, la visite est surtout de la marche.
   À revoir avec la taille de carte et la durée d'une journée (itération 4 ou palier V0.2).
-- Économie : un zoo fréquenté est toujours très rentable (billets ≫ nourriture + entretien) ; à rééquilibrer à l'itération 4
-  (salaires en V0.3).
-- Alertes du zoo non annoncées vocalement à leur apparition (seul le bilan de minuit l'est).
+- Économie : rééquilibrée à l'itération 4 (ADR-029) sur deux parties scriptées seulement ; un zoo complet rapporte encore
+  ~2 000 par jour sans dépense à venir (salaires en V0.3, objectifs au-delà de « Premiers pas »).
+- Alertes du zoo non annoncées vocalement à leur apparition (seul le bilan de minuit l'est, avec la faillite proche).
+- Sauvegarde (itération 4) : un seul emplacement localStorage, JSON non compacté (~125 Ko pour `busy-day`, 40 animaux et ~150 visiteurs) ; plusieurs
+  emplacements, export de fichier et IndexedDB à prévoir.
+- Tutoriel : avancement global au navigateur (pas par partie) ; pas de flèche vers l'outil concerné.
+- Bancs : place choisie par parité d'id (deux assis de même parité se superposent) ; pas de bulle « fatigué ».
+- Message (toast) en haut au centre : à grande échelle d'interface sur mobile, il chevauche les barres du haut un instant.
+- Écran titre sur fond de carte vide ; pas de sons ni de nouvelles particules (polish optionnel non fait).
+- Références de régression visuelle propres au poste de développement ; e2e pas encore en CI.
 
 ## Questions ouvertes
 

@@ -77,7 +77,7 @@ Malus : espèce sociale seule (−20 de bien-être cible), cohabitation interdit
 Deux types au POC : **adulte** et **enfant** (modèles et paramètres distincts : l'enfant a plus d'intérêt
 pour les animaux « mignons », se fatigue vite).
 
-Jauges : **satisfaction** (0 à 100), **faim**, **patience**.
+Jauges : **satisfaction** (0 à 100), **faim**, **patience**, **énergie** (baisse en marchant, plus vite chez l'enfant).
 
 Machine à états :
 
@@ -91,17 +91,21 @@ ARRIVING → WANDERING → WALKING_TO_VIEW → VIEWING → (WALKING_TO_FOOD → 
   (animal proche de la clôture).
 - Faim élevée → cherche un stand de snacks ; s'il n'y en a pas, la satisfaction baisse.
 - Patience épuisée (trop de marche, rien à voir) → part mécontent.
+- Énergie basse → cherche un **banc** libre (2 places), s'y assoit et récupère énergie, patience et un peu de
+  satisfaction. Sans banc, un visiteur fatigué perd patience deux fois plus vite.
 - Satisfaction finale au départ → alimente la **note du zoo**.
 
 ## Économie
 
 - Argent de départ : **50 000**.
-- Billet d'entrée : réglable 5 à 50, défaut 20. Un prix trop haut par rapport à la note du zoo réduit les arrivées.
+- Billet d'entrée : réglable 5 à 50, défaut 15. Prix accepté ≈ 6 + 4 × note ; au-delà, les arrivées chutent.
 - Arrivées : `visitorsPerDay = base × f(note du zoo, prix du billet, diversité d'espèces)`.
 - Dépenses récurrentes (par jour) : nourriture des animaux, entretien des équipements (1 % du coût de construction).
 - Revenus : billets, snacks (marge 60 %).
 - **Note du zoo** (1 à 5 étoiles) : moyenne pondérée du bien-être moyen des animaux, de la satisfaction
-  moyenne des visiteurs (7 derniers jours), de la diversité d'espèces ; pénalité par animal mort récent.
+  moyenne des visiteurs (7 derniers jours), de la diversité d'espèces ; pénalité par animal mort récent. Un zoo qui
+  ouvre part de 2,5 étoiles ; la note rejoint peu à peu la note visée (+0,6 étoile par jour au plus, −1,2 en baisse).
+- Équilibrage vérifié par deux parties scriptées (`tests/sim/balance.test.ts`), voir ADR-029.
 
 ## Objectifs et fin de partie
 
@@ -112,7 +116,8 @@ Scénario « Premiers pas » :
 3. Atteindre 3 étoiles.
 4. Atteindre 4 espèces et 4 étoiles.
 
-**Défaite** : argent < 0 pendant 10 jours consécutifs. Pas de victoire « finale » au POC : mode bac à sable après les objectifs.
+Objectifs successifs (un seul en cours, affiché en haut à gauche). **Défaite** : argent < 0 pendant 10 jours consécutifs
+(compté à chaque fin de journée, alerte « Faillite dans N jours »). Pas de victoire « finale » au POC : mode bac à sable après les objectifs.
 
 ## Sauvegarde
 

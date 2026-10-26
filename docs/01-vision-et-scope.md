@@ -53,7 +53,13 @@ Construire (chemins, enclos, équipements)
 Le POC est réussi si, après 20 minutes de jeu :
 
 - [ ] On a envie de « juste placer un animal de plus » ou d'agrandir un enclos.
-- [ ] On voit sans effort **qui est affamé, qui est content, quel enclos attire du monde**.
-- [ ] Un zoo mal conçu fait vraiment perdre de l'argent, un zoo bien pensé est rentable.
-- [ ] Le jeu tient 60 fps sur un laptop récent avec ~40 animaux et ~150 visiteurs.
-- [ ] Une partie sauvegardée se recharge à l'identique.
+  *Itération 4 : non évaluable sans playtest humain (objectifs successifs et bac à sable en place pour le soutenir).*
+- [x] On voit sans effort **qui est affamé, qui est content, quel enclos attire du monde**.
+  *Icônes d'état des animaux, bulles d'humeur des visiteurs, foule devant les enclos, alertes (revues des itérations 2 à 4).*
+- [x] Un zoo mal conçu fait vraiment perdre de l'argent, un zoo bien pensé est rentable.
+  *Test de rentabilité `tests/sim/balance.test.ts` : faillite au jour 17 (ou 26 au prix juste) contre +2 000 par jour (ADR-029).*
+- [x] Le jeu tient 60 fps sur un laptop récent avec ~40 animaux et ~150 visiteurs.
+  *Apple M3 Pro, Chromium Metal, 1920 × 1080, `busy-day` : 219 visiteurs, 40 animaux, frame moyenne 16,6 ms
+  (p95 16,8 ms, calée sur la synchro écran) avec la simulation qui tourne (itération 4).*
+- [x] Une partie sauvegardée se recharge à l'identique.
+  *Test aller-retour : état identique, puis un jour de jeu identique après rechargement (`tests/sim/save.test.ts`).*

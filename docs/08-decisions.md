@@ -242,10 +242,73 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
 - **Conséquences** : un problème se repère en moins de 3 secondes ; les alertes ne sont pas annoncées vocalement à leur
   apparition (seul le bilan l'est), à revoir avec les annonces « Faillite proche » de l'itération 4.
 
+## ADR-028 : Objectifs et défaite dans l'état de simulation
+- **Statut** : accepté (itération 4)
+- **Décision** : le scénario « Premiers pas » est une donnée (`sim/data/scenario.ts` : objectifs faits de conditions
+  `species`, `visitorsInDay`, `rating`). L'avancement (`state.scenario` : tick d'obtention de chaque objectif, jours
+  consécutifs dans le rouge, issue) est dans l'état, donc sauvegardé. Système `objectives` après `economy` et `rating` :
+  un objectif à la fois, dans l'ordre ; fin de journée comptée une seule fois (`lastDayChecked`). À la faillite, la
+  partie s'arrête (la boucle ne fait plus avancer le temps) et l'écran de fin s'affiche.
+- **Conséquences** : un autre scénario = une autre entrée de données. Pas de victoire finale : bac à sable ensuite.
+
+## ADR-029 : Équilibrage par parties scriptées
+- **Statut** : accepté (itération 4) ; remplace les valeurs d'ADR-025
+- **Décision** : deux stratégies jouées depuis l'état initial (`tests/sim/strategies.ts`) servent de test de rentabilité.
+  Bonne : enclos adaptés et équipés, stand, bancs, billet au prix accepté → 4 objectifs vers le jour 5, jamais dans le
+  rouge, +2 000 à +2 500 par jour ensuite. Mauvaise : animaux entassés, sans sol ni décor, billet à 45 → faillite au
+  jour 17 ; la même au prix juste perd ~600 par jour → faillite au jour 26. Réglages retenus :
+  - note : plancher de score 0,32 (un zoo médiocre reste vers 2 étoiles), départ à 2,5, inertie +0,6 / −1,2 étoile
+    par jour (sans elle, 3 étoiles dès la première heure) ;
+  - prix accepté 6 + 4 × note (au lieu de 8 + 6 × note), billet par défaut 15 ;
+  - nourriture des animaux ×3,5 (zèbre 140, girafe 220, lion 320, panda 450 par jour) ;
+  - les visiteurs sont tristes devant des animaux à moins de 50 de bien-être (au lieu de 35).
+  Les scénarios de démonstration peuvent fixer une note de départ (`rating`), comme l'argent.
+- **Conséquences** : un rééquilibrage qui rend le jeu trop facile ou impossible casse `npm run check`. Une partie scriptée
+  « optimale » finit vers le jour 5 : un humain mettra plus longtemps, à confirmer au playtest.
+
+## ADR-030 : Énergie des visiteurs et bancs
+- **Statut** : accepté (itération 4)
+- **Décision** : nouvelle jauge `energy` (perte 0,15 par tick pour l'adulte, 0,24 pour l'enfant, sauf assis ou en train
+  de manger). Sous 40, le visiteur cherche le banc libre le plus proche (`BuildingDef.seats`, 2 places, occupation
+  comptée une fois par tick) : états `walkingToBench` → `resting` (60 ticks : +1,5 énergie, +0,5 patience,
+  +0,08 satisfaction par tick). Sans banc, la fatigue double la perte de patience. La patience seule ne convenait pas :
+  chaque observation la remonte juste avant la décision, les bancs ne servaient jamais.
+- **Conséquences** : un banc se pose au bord d'un chemin et se tourne vers lui ; le visiteur s'assoit sur le banc (rendu),
+  une place par parité d'id.
+
+## ADR-031 : Sauvegarde JSON et déroulement indépendant des caches
+- **Statut** : accepté (itération 4) ; précise `03-architecture.md`
+- **Décision** : `persistence/save.ts` (pur, testé sous Node) sérialise l'état complet ; `saveVersion` 4 est le premier
+  format écrit (les précédents n'ont jamais été sauvegardés) ; migrations `MIGRATIONS[n]` (n → n + 1), contrôle de forme
+  minimal au chargement. `persistence/storage.ts` : un emplacement localStorage, sauvegarde manuelle (menu) et
+  automatique à chaque changement de jour (jamais une partie perdue, ni pendant les tests). Le budget de pathfinding compte
+  désormais toutes les demandes, en cache ou non (40 par tick) : le cache, non sauvegardé, ne change plus le
+  déroulement, et une partie rechargée se poursuit à l'identique (test : un jour complet après rechargement).
+- **Conséquences** : les vues de rendu ne se fient plus seulement à `world.revision` (une partie chargée peut avoir la
+  même révision) : elles comparent aussi l'objet monde ou réseau.
+
+## ADR-032 : Écrans modaux, tutoriel et colonne d'information
+- **Statut** : accepté (itération 4)
+- **Décision** : écran titre, menu et fin de partie sont des `<dialog>` natifs (`showModal`) : focus piégé, reste inerte ;
+  le temps s'arrête tant qu'un écran est ouvert et les raccourcis du jeu se taisent. Le focus est retiré d'un écran qu'on
+  ferme. Le tutoriel (5 bulles) se déduit de l'état (consigne faite → bulle suivante) ; son avancement est une commodité
+  locale (localStorage), pas de l'état de jeu ; coupé pour les scénarios de démonstration. Colonne de gauche : objectif
+  en cours, alertes, bulle d'aide ; placée par mesure sous les barres du haut (suit l'échelle d'interface). Bouton Menu
+  à part, devant l'argent. La vue de départ montre l'entrée et la sortie.
+- **Conséquences** : sur écran étroit, les alertes tiennent sur une rangée qui défile ; à 150 %, la barre d'outils défile.
+
+## ADR-033 : Régression visuelle propre à la machine
+- **Statut** : accepté (itération 4)
+- **Décision** : `tests/e2e/regression.spec.ts` compare 5 scénarios stables (temps figé, vue éloignée, desktop) à des
+  références versionnées dans `tests/e2e/__screenshots__/<plateforme>/`, tolérance 1 % de pixels. Le rendu WebGL
+  logiciel varie d'une machine à l'autre : les références sont celles du poste de développement.
+- **Conséquences** : après un changement visuel voulu, `npx playwright test regression --update-snapshots`. Les e2e ne
+  tournent pas encore en CI.
+
 ---
 
 ## Journal des playtests
 
 | Date | Itération | Ce qui est fun | Ce qui ne l'est pas | Décisions |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-26 | 4 | (Claude, parties scriptées et captures, pas un vrai playtest) Les objectifs donnent un fil ; les bancs occupés et les bulles rendent le zoo vivant ; la faillite se voit venir (alerte qui décompte). | À vérifier par un humain : le premier jour est-il trop lent (note qui monte de 0,6 par jour) ? La bonne stratégie finit les objectifs vers le jour 5 : bac à sable trop tôt pour un joueur expérimenté ? | Playtest humain à faire (critère « comprend en moins de 3 minutes »). |
