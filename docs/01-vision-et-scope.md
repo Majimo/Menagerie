@@ -52,8 +52,8 @@ Construire (chemins, enclos, équipements)
 
 Le POC est réussi si, après 20 minutes de jeu :
 
-- [ ] On a envie de « juste placer un animal de plus » ou d'agrandir un enclos.
-  *Itération 4 : premier retour de Pierre positif pour un POC ; à confirmer sur un playtest de 20 minutes au palier suivant.*
+- [x] On a envie de « juste placer un animal de plus » ou d'agrandir un enclos.
+  *Itération 4 : confirmé par le playtest de Pierre (2026-10-26).*
 - [x] On voit sans effort **qui est affamé, qui est content, quel enclos attire du monde**.
   *Icônes d'état des animaux, bulles d'humeur des visiteurs, foule devant les enclos, alertes (revues des itérations 2 à 4).*
 - [x] Un zoo mal conçu fait vraiment perdre de l'argent, un zoo bien pensé est rentable.
