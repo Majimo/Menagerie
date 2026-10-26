@@ -312,3 +312,4 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
 | Date | Itération | Ce qui est fun | Ce qui ne l'est pas | Décisions |
 |---|---|---|---|---|
 | 2026-10-26 | 4 | (Claude, parties scriptées et captures, pas un vrai playtest) Les objectifs donnent un fil ; les bancs occupés et les bulles rendent le zoo vivant ; la faillite se voit venir (alerte qui décompte). | À vérifier par un humain : le premier jour est-il trop lent (note qui monte de 0,6 par jour) ? La bonne stratégie finit les objectifs vers le jour 5 : bac à sable trop tôt pour un joueur expérimenté ? | Playtest humain à faire (critère « comprend en moins de 3 minutes »). |
+| 2026-10-26 | 4 | (Pierre) Prise en main validée : « ça fonctionne bien avec les quelques petites choses qu'on a pour un POC ». | Rien de bloquant signalé ; rythme du premier jour et envie de continuer en bac à sable à suivre au palier suivant. | Itération 4 clôturée. |

@@ -124,11 +124,11 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 - Premier playtest : noter ce qui est fun et ce qui ne l'est pas dans `docs/08-decisions.md`.
 
 **Critères d'acceptation**
-- [ ] Un joueur qui n'a jamais vu le jeu comprend quoi faire en moins de 3 minutes.
-- [ ] Le scénario est gagnable avec une bonne stratégie et perdable avec une mauvaise.
-- [ ] Sauvegarder puis recharger redonne un état identique (test aller-retour).
-- [ ] Les critères de succès de `01-vision-et-scope.md` sont évalués et cochés (ou ce qui manque est listé).
-- [ ] Revue complète : tous les scénarios sur les 3 viewports ; zéro violation axe serious/critical sur tous les écrans ; échelle d'interface 150 % sans casse ; rapport `artifacts/review/4.md` sans ❌ ; régression visuelle (`toHaveScreenshot`) en place sur les scénarios stables.
+- [x] Un joueur qui n'a jamais vu le jeu comprend quoi faire en moins de 3 minutes.
+- [x] Le scénario est gagnable avec une bonne stratégie et perdable avec une mauvaise.
+- [x] Sauvegarder puis recharger redonne un état identique (test aller-retour).
+- [x] Les critères de succès de `01-vision-et-scope.md` sont évalués et cochés (ou ce qui manque est listé).
+- [x] Revue complète : tous les scénarios sur les 3 viewports ; zéro violation axe serious/critical sur tous les écrans ; échelle d'interface 150 % sans casse ; rapport `artifacts/review/4.md` sans ❌ ; régression visuelle (`toHaveScreenshot`) en place sur les scénarios stables.
 
 **Prompt** : « Réalise l'itération 4, puis fais-moi un compte rendu des critères de succès du POC. »
 
