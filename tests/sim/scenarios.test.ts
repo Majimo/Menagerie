@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { zooAlerts } from '../../src/sim/alerts';
+import { balance } from '../../src/sim/data/balance';
 import { animalStatus } from '../../src/sim/entities';
 import { timeOfDay } from '../../src/sim/time';
 import { runScenario, scenarios } from '../e2e/scenarios';
@@ -44,6 +45,17 @@ describe('scénarios de capture', () => {
     const alerts = zooAlerts(state);
     expect(alerts.unreachableEnclosures).toEqual([]);
     expect(alerts.blockedVisitors).toBe(0);
+    expect(timeOfDay(state.tick).night).toBe(false);
+  });
+
+  it('snack-time : les visiteurs affamés vont aux stands, certains mangent, la recette snacks monte', () => {
+    const state = runScenario(scenarios['snack-time']);
+    const visitors = Object.values(state.visitors);
+    const hungry = visitors.filter((v) => v.hunger < balance.visitors.hungryBelow && v.state !== 'eating');
+    expect(hungry.length).toBeGreaterThan(0);
+    expect(hungry.every((v) => v.state === 'walkingToFood')).toBe(true);
+    expect(visitors.filter((v) => v.state === 'eating').length).toBeGreaterThan(0);
+    expect(state.stats.today.snacks).toBeGreaterThan(0);
     expect(timeOfDay(state.tick).night).toBe(false);
   });
 

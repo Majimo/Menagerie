@@ -13,6 +13,7 @@ const SCENARIOS: ScenarioName[] = [
   'four-species',
   'animal-needs',
   'busy-day',
+  'snack-time',
   'crisis',
 ];
 const OUT_DIR = `artifacts/screenshots/${ITERATION}`;

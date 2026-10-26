@@ -23,6 +23,8 @@ export interface VisitorNetwork {
   viewFacing: Map<number, number>;
   /** Tuiles de chemin atteignables voisines d'un stand de snacks. */
   snackSpots: number[];
+  /** Pour chaque tuile de `snackSpots`, le stand qu'elle dessert. */
+  snackFacing: Map<number, number>;
 }
 
 /** Le visiteur peut-il marcher sur cette tuile ? (chemin hors enclos) */
@@ -91,7 +93,14 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
   for (const building of Object.values(state.buildings)) {
     if (BUILDINGS[building.kind].sellsSnacks) snackTiles.add(tileIndex(world, building.tile));
   }
-  const snackSpots = sorted.filter((spot) => openNeighbours(world, spot).some((n) => snackTiles.has(n)));
+  const snackSpots: number[] = [];
+  const snackFacing = new Map<number, number>();
+  for (const spot of sorted) {
+    const stand = openNeighbours(world, spot).find((n) => snackTiles.has(n));
+    if (stand === undefined) continue;
+    snackSpots.push(spot);
+    snackFacing.set(spot, stand);
+  }
 
   return {
     revision: world.revision,
@@ -103,5 +112,6 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
     viewSpots,
     viewFacing,
     snackSpots,
+    snackFacing,
   };
 }

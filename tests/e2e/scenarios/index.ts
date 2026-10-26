@@ -271,6 +271,17 @@ export const scenarios = {
     focus: { x: 23, y: 31 },
   },
   /**
+   * Issue #4 : le zoo de `busy-day` en fin d'après-midi (17 h 36), quand la faim gagne. Les visiteurs affamés
+   * vont aux stands de snacks au lieu de rester devant les enclos ; vue centrée sur les deux stands de l'entrée.
+   */
+  'snack-time': {
+    seed: 5,
+    money: 500_000,
+    commands: busyDay(),
+    ticks: 480,
+    focus: { x: 23, y: 43 },
+  },
+  /**
    * Itération 3 : zoo en crise, de jour. Argent négatif (dépenses > recettes), zèbres morts et affamés (ni eau ni
    * nourrisseur), lions sans chemin (enclos invisible), pas de stand de snacks, billet cher, puis l'allée de la
    * sortie est coupée : des visiteurs sont bloqués.

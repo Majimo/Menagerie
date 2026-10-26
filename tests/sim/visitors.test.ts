@@ -5,6 +5,7 @@ import { createVisitor } from '../../src/sim/entities';
 import { dispatchCommand, stepSimulation } from '../../src/sim/simulation';
 import { createInitialState, type GameState, type VisitorState } from '../../src/sim/state';
 import { updateVisitorSpawn } from '../../src/sim/systems/visitorSpawn';
+import { ticksUntilHour } from '../../src/sim/time';
 import { tileIndex } from '../../src/sim/world/grid';
 import { buildEnclosure, buildVisitorZoo, buyAnimal, placePath, runDays } from './helpers';
 
@@ -67,6 +68,73 @@ describe('visiteurs : machine à états', () => {
     // Les billets des visiteurs arrivés spontanément (puis retirés) sont aussi encaissés.
     expect(state.money).toBe(money + income + state.stats.today.tickets - tickets);
     expect(visitor.hunger).toBeGreaterThan(balance.visitors.hungryBelow);
+  });
+
+  it('plusieurs visiteurs affamés, deux stands voisins dans un coin du chemin : tous mangent (issue #4)', () => {
+    const state = quietZoo();
+    for (const x of [22, 23]) {
+      expect(dispatchCommand(state, { type: 'PlaceBuilding', kind: 'snack', tile: { x, y: 40 } }).ok).toBe(
+        true,
+      );
+    }
+    const visitors = Array.from({ length: 8 }, (_, i) => {
+      const visitor = createVisitor(state, i % 2 ? 'child' : 'adult', entrance);
+      visitor.hunger = 10;
+      visitor.viewsWanted = 10;
+      return visitor;
+    });
+    const ate = new Set<number>();
+    for (let i = 0; i < 300; i++) {
+      stepWithoutArrivals(state, 1);
+      for (const visitor of visitors) if (visitor.state === 'eating') ate.add(visitor.id);
+    }
+    expect(ate.size).toBe(visitors.length);
+    const income = Math.round(balance.economy.snackPrice * balance.economy.snackMargin);
+    expect(state.stats.today.snacks).toBe(visitors.length * income);
+  });
+
+  it('un visiteur qui a faim en pleine observation écourte sa visite et va manger', () => {
+    const state = quietZoo();
+    dispatchCommand(state, { type: 'PlaceBuilding', kind: 'snack', tile: { x: 22, y: 40 } });
+    const visitor = createVisitor(state, 'adult', entrance);
+    visitor.viewsWanted = 3;
+    for (let i = 0; i < 300 && visitor.state !== 'viewing'; i++) stepWithoutArrivals(state, 1);
+    expect(visitor.state).toBe('viewing');
+    visitor.hunger = 10;
+    stepWithoutArrivals(state, 1);
+    expect(visitor.state).toBe('walkingToFood');
+    expect(visitor.seen).toHaveLength(1);
+  });
+
+  it('un visiteur affamé en fin de visite mange avant de partir', () => {
+    const state = quietZoo();
+    dispatchCommand(state, { type: 'PlaceBuilding', kind: 'snack', tile: { x: 25, y: 40 } });
+    const visitor = createVisitor(state, 'adult', entrance);
+    visitor.viewsWanted = 0;
+    stepWithoutArrivals(state, 1);
+    expect(visitor.state).toBe('leaving');
+    // La faim le prend sur le chemin de la sortie.
+    visitor.hunger = 10;
+    const states: VisitorState[] = [];
+    for (let i = 0; i < 600 && state.visitors[visitor.id]; i++) {
+      stepWithoutArrivals(state, 1);
+      if (states[states.length - 1] !== visitor.state) states.push(visitor.state);
+    }
+    expect(states).toEqual(['walkingToFood', 'eating', 'wandering', 'leaving']);
+    expect(state.visitors[visitor.id]).toBeUndefined();
+    expect(visitor.leaveReason).toBe('done');
+  });
+
+  it('à la fermeture, un visiteur affamé rentre sans passer au stand', () => {
+    const state = quietZoo();
+    dispatchCommand(state, { type: 'PlaceBuilding', kind: 'snack', tile: { x: 22, y: 40 } });
+    stepWithoutArrivals(state, ticksUntilHour(state.tick, balance.visitors.closeHour));
+    const visitor = createVisitor(state, 'adult', entrance);
+    visitor.hunger = 10;
+    stepWithoutArrivals(state, 20);
+    expect(visitor.state).toBe('leaving');
+    expect(visitor.leaveReason).toBe('closing');
+    expect(state.stats.today.snacks).toBe(0);
   });
 
   it('sans stand de snacks, la faim fait baisser la satisfaction et le joueur est prévenu', () => {

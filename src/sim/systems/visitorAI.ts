@@ -1,12 +1,10 @@
 import { balance } from '../data/balance';
-import { BUILDINGS } from '../data/buildings';
 import { SPECIES } from '../data/species';
 import { VISITOR_KINDS } from '../data/visitors';
 import { nextFloat, nextInt } from '../rng';
 import type { EnclosureId, GameState, Visitor, VisitorLeaveReason } from '../state';
 import { timeOfDay } from '../time';
 import { tileAt, tileIndex } from '../world/grid';
-import { openNeighbours } from '../world/paths';
 import { isVisitorWalkable, type VisitorNetwork, visitorNetwork } from '../world/visitorNetwork';
 
 // Système `visitorAI` : machine à états des visiteurs (docs/02), déplacement le long des trajets
@@ -77,6 +75,10 @@ function updateVisitor(ctx: AiContext, visitor: Visitor): void {
     visitor.satisfaction = Math.max(0, visitor.satisfaction - v.hungryNoFoodLossPerTick);
   }
   if (ctx.closing && visitor.state !== 'leaving') startLeaving(ctx, visitor, 'closing');
+  if (wantsToEat(ctx, visitor)) {
+    if (visitor.state === 'viewing') finishView(visitor);
+    goEat(ctx, visitor);
+  }
 
   switch (visitor.state) {
     case 'arriving':
@@ -98,7 +100,32 @@ function updateVisitor(ctx: AiContext, visitor: Visitor): void {
   }
 }
 
-/** Choisit la suite : partir, manger, ou aller voir un enclos. */
+/**
+ * Un visiteur affamé qui peut atteindre un stand va manger, même en pleine observation ou sur le chemin
+ * de la sortie après sa visite. Seuls la fermeture et un blocage l'en empêchent.
+ */
+function wantsToEat(ctx: AiContext, visitor: Readonly<Visitor>): boolean {
+  if (ctx.closing || visitor.hunger >= balance.visitors.hungryBelow || ctx.network.snackSpots.length === 0) {
+    return false;
+  }
+  switch (visitor.state) {
+    case 'walkingToFood':
+    case 'eating':
+      return false;
+    case 'leaving':
+      return visitor.leaveReason === 'done' || visitor.leaveReason === 'impatient';
+    default:
+      return true;
+  }
+}
+
+function goEat(ctx: AiContext, visitor: Visitor): void {
+  visitor.state = 'walkingToFood';
+  visitor.targetEnclosure = 0;
+  requestPath(visitor, nearest(ctx.state, currentTile(ctx.state, visitor), ctx.network.snackSpots));
+}
+
+/** Choisit la suite : partir ou aller voir un enclos (la faim est traitée avant, par `wantsToEat`). */
 function decide(ctx: AiContext, visitor: Visitor): void {
   const v = balance.visitors;
   if (visitor.seen.length >= visitor.viewsWanted) {
@@ -111,11 +138,6 @@ function decide(ctx: AiContext, visitor: Visitor): void {
     return;
   }
   const here = currentTile(ctx.state, visitor);
-  if (visitor.hunger < v.hungryBelow && ctx.network.snackSpots.length > 0) {
-    visitor.state = 'walkingToFood';
-    requestPath(visitor, nearest(ctx.state, here, ctx.network.snackSpots));
-    return;
-  }
   const target = pickEnclosure(ctx, visitor, here);
   if (target === 0) {
     // Rien à voir : le visiteur attend en perdant patience.
@@ -263,13 +285,10 @@ function arrive(ctx: AiContext, visitor: Visitor): void {
       return;
     }
     case 'walkingToFood': {
-      const here = currentTile(state, visitor);
-      const stand = openNeighbours(state.world, here).find((n) =>
-        Object.values(state.buildings).some(
-          (b) => BUILDINGS[b.kind].sellsSnacks && tileIndex(state.world, b.tile) === n,
-        ),
-      );
+      // Même source que `snackSpots` : un visiteur arrivé sur une tuile de stand trouve toujours son stand.
+      const stand = ctx.network.snackFacing.get(currentTile(state, visitor));
       if (stand === undefined) {
+        // Le stand a disparu pendant le trajet : `decide` (ou `wantsToEat`) choisira la suite.
         visitor.state = 'wandering';
         return;
       }
@@ -331,8 +350,13 @@ function view(ctx: AiContext, visitor: Visitor): void {
       react(ctx.state, visitor, 'joy');
   }
   if (--visitor.stateTicks > 0) return;
+  finishView(visitor);
+}
+
+/** Fin d'observation (complète ou écourtée par la faim) : l'enclos compte comme vu. */
+function finishView(visitor: Visitor): void {
   visitor.seen.push(visitor.targetEnclosure);
-  visitor.patience = Math.min(100, visitor.patience + v.viewPatienceGain);
+  visitor.patience = Math.min(100, visitor.patience + balance.visitors.viewPatienceGain);
   visitor.state = 'wandering';
 }
 
