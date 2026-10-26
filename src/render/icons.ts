@@ -1,4 +1,3 @@
-import type { SpeciesId } from '../sim/data/species';
 import type { AnimalStatus, VisitorMood } from '../sim/entities';
 
 // Icônes maison dessinées sur canvas (pas d'emoji système, docs/04) : partagées par le rendu 3D (sprites)
@@ -6,7 +5,7 @@ import type { AnimalStatus, VisitorMood } from '../sim/entities';
 
 const SIZE = 96;
 
-type Draw = (ctx: CanvasRenderingContext2D) => void;
+export type Draw = (ctx: CanvasRenderingContext2D) => void;
 
 export const STATUS_COLORS: Record<Exclude<AnimalStatus, 'content'>, string> = {
   hungry: '#c8661a',
@@ -17,7 +16,7 @@ export const STATUS_COLORS: Record<Exclude<AnimalStatus, 'content'>, string> = {
   dead: '#4a4744',
 };
 
-const INK = '#2d2a24';
+export const INK = '#2d2a24';
 const LIGHT = '#fff6e5';
 
 function outlined(ctx: CanvasRenderingContext2D, fill: string, shape: () => void): void {
@@ -285,127 +284,9 @@ const MOOD_DRAW: Record<ShownMood, Draw> = {
   },
 };
 
-const SPECIES_DRAW: Record<SpeciesId, Draw> = {
-  // Zèbre : tête longue blanche, rayures noires, museau noir, oreilles pointues.
-  zebra: (ctx) => {
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(48, 52, 20, 34, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#f7f4ee';
-    ctx.fill();
-    ctx.clip();
-    ctx.fillStyle = '#23211d';
-    for (const y of [22, 36, 50]) ctx.fillRect(20, y, 56, 7);
-    ctx.fillRect(20, 68, 56, 20);
-    ctx.restore();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = INK;
-    ctx.beginPath();
-    ctx.ellipse(48, 52, 20, 34, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = '#f7f4ee';
-    for (const dx of [-1, 1]) {
-      ctx.beginPath();
-      polygon(ctx, [
-        [48 + dx * 10, 24],
-        [48 + dx * 22, 2],
-        [48 + dx * 22, 26],
-      ]);
-      ctx.fill();
-      ctx.stroke();
-    }
-  },
-  // Girafe : tête orange tachetée, deux ossicônes à bout sombre.
-  giraffe: (ctx) => {
-    ctx.fillStyle = '#e2a845';
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 3;
-    for (const dx of [-9, 9]) {
-      ctx.fillRect(48 + dx - 3, 8, 6, 22);
-      ctx.beginPath();
-      ctx.arc(48 + dx, 8, 6, 0, Math.PI * 2);
-      ctx.fillStyle = '#4a3420';
-      ctx.fill();
-      ctx.fillStyle = '#e2a845';
-    }
-    ctx.beginPath();
-    ctx.ellipse(48, 56, 19, 32, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#9a5a26';
-    for (const [x, y] of [
-      [40, 40],
-      [56, 46],
-      [44, 58],
-    ] as const) {
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.beginPath();
-    ctx.ellipse(18, 36, 12, 5, -0.3, 0, Math.PI * 2);
-    ctx.ellipse(78, 36, 12, 5, 0.3, 0, Math.PI * 2);
-    ctx.fillStyle = '#e2a845';
-    ctx.fill();
-    ctx.stroke();
-  },
-  // Lion : grande crinière en étoile, face fauve, nez sombre.
-  lion: (ctx) => {
-    const points: [number, number][] = [];
-    for (let i = 0; i < 28; i++) {
-      const r = i % 2 ? 34 : 44;
-      const a = (i / 28) * Math.PI * 2;
-      points.push([48 + Math.cos(a) * r, 48 + Math.sin(a) * r]);
-    }
-    outlined(ctx, '#7a3e1b', () => polygon(ctx, points));
-    ctx.beginPath();
-    ctx.arc(48, 50, 22, 0, Math.PI * 2);
-    ctx.fillStyle = '#d9a056';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = INK;
-    ctx.stroke();
-    ctx.fillStyle = INK;
-    ctx.beginPath();
-    polygon(ctx, [
-      [41, 56],
-      [55, 56],
-      [48, 64],
-    ]);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(40, 44, 3, 0, Math.PI * 2);
-    ctx.arc(56, 44, 3, 0, Math.PI * 2);
-    ctx.fill();
-  },
-  // Panda : tête ronde blanche, oreilles et taches des yeux noires.
-  panda: (ctx) => {
-    ctx.fillStyle = '#23211d';
-    ctx.beginPath();
-    ctx.arc(24, 24, 13, 0, Math.PI * 2);
-    ctx.arc(72, 24, 13, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(48, 52, 34, 0, Math.PI * 2);
-    ctx.fillStyle = '#f7f4ee';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = INK;
-    ctx.stroke();
-    ctx.fillStyle = '#23211d';
-    ctx.beginPath();
-    ctx.ellipse(35, 48, 8, 11, 0.5, 0, Math.PI * 2);
-    ctx.ellipse(61, 48, 8, 11, -0.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(48, 66, 7, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-  },
-};
-
 const cache = new Map<string, HTMLCanvasElement>();
 
-function cached(key: string, draw: Draw): HTMLCanvasElement {
+export function cached(key: string, draw: Draw): HTMLCanvasElement {
   let canvas = cache.get(key);
   if (!canvas) {
     canvas = document.createElement('canvas');
@@ -447,8 +328,4 @@ export function alertIcon(): HTMLCanvasElement {
 
 export function moodIcon(mood: ShownMood): HTMLCanvasElement {
   return cached(`mood.${mood}`, MOOD_DRAW[mood]);
-}
-
-export function speciesIcon(species: SpeciesId): HTMLCanvasElement {
-  return cached(`species.${species}`, SPECIES_DRAW[species]);
 }

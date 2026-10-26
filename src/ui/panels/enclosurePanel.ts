@@ -1,4 +1,4 @@
-import { speciesIcon } from '../../render/icons';
+import { speciesIcon } from '../../render/speciesIcons';
 import { SPECIES_IDS } from '../../sim/data/species';
 import { animalStatus } from '../../sim/entities';
 import type { Enclosure, GameState } from '../../sim/state';

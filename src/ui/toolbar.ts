@@ -1,4 +1,4 @@
-import { speciesIcon } from '../render/icons';
+import { speciesIcon } from '../render/speciesIcons';
 import { balance } from '../sim/data/balance';
 import { BUILDING_KINDS, BUILDINGS } from '../sim/data/buildings';
 import { SPECIES, SPECIES_IDS } from '../sim/data/species';

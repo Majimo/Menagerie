@@ -1,4 +1,4 @@
-import { speciesIcon } from '../render/icons';
+import { speciesIcon } from '../render/speciesIcons';
 import { FIRST_STEPS } from '../sim/data/scenario';
 import { SPECIES_IDS } from '../sim/data/species';
 import type { GameState } from '../sim/state';

@@ -3,7 +3,8 @@ import { SPECIES_IDS, type SpeciesId } from '../../sim/data/species';
 import type { GameState } from '../../sim/state';
 import { animalsIn } from '../../sim/world/habitat';
 import { visitorNetwork } from '../../sim/world/visitorNetwork';
-import { ALERT_COLOR, alertIcon, speciesIcon } from '../icons';
+import { ALERT_COLOR, alertIcon } from '../icons';
+import { speciesIcon } from '../speciesIcons';
 
 // Badge flottant au-dessus de chaque enclos habité : icônes des espèces présentes, lisible au zoom éloigné.
 // Un enclos qu'aucun chemin relié à l'entrée ne longe porte un triangle d'alerte et un contour rouge.
