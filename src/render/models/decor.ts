@@ -61,12 +61,13 @@ export function benchGeometry(): BufferGeometry {
   const dark = 0x4a4a4f;
   const parts: BufferGeometry[] = [
     coloredBox([0.3, 0.05, 0.86], [0, BENCH_SEAT_HEIGHT, 0], wood),
-    coloredBox([0.05, 0.22, 0.86], [-0.17, BENCH_SEAT_HEIGHT + 0.16, 0], wood),
+    // Dossier bas : vu de dos, il ne cache pas le visiteur assis.
+    coloredBox([0.05, 0.12, 0.86], [-0.17, BENCH_SEAT_HEIGHT + 0.1, 0], wood),
   ];
   for (const z of [-0.36, 0.36]) {
     parts.push(
       coloredBox([0.3, BENCH_SEAT_HEIGHT, 0.05], [0, BENCH_SEAT_HEIGHT / 2, z], dark),
-      coloredBox([0.05, 0.42, 0.05], [-0.17, 0.21 + 0.06, z], dark),
+      coloredBox([0.05, BENCH_SEAT_HEIGHT + 0.16, 0.05], [-0.17, (BENCH_SEAT_HEIGHT + 0.16) / 2, z], dark),
     );
   }
   return merged(parts);

@@ -64,7 +64,7 @@ export function createGameUi({
   const money = createMoneyDisplay(root, reducedMotion, [status.el]);
   const inspector = createInspector(root, dispatch);
   const toast = createToast(root);
-  // Colonne de gauche, sous l'argent : objectif en cours, puis problèmes du zoo.
+  // Colonne de gauche, sous l'argent : objectif en cours, problèmes du zoo, puis bulle d'aide.
   const objectives = createObjectivesCard(toast);
   const column = h('div', { className: 'hud-left' }, [objectives.el]);
   root.append(column);
@@ -91,7 +91,8 @@ export function createGameUi({
   const clock = createTimeControls(root, speed, [zooButton]);
   createCameraControls(root, renderer.camera);
   createToolbar(root, tools);
-  const tutorial = createTutorial(root);
+  // Bulle d'aide dans la colonne, sous l'objectif et les alertes : elle ne masque aucun contrôle.
+  const tutorial = createTutorial(column);
   placeBelowTopBars(column, root);
   const tooltip = createTooltip(root);
   const notices = createNotices(toast);

@@ -30,8 +30,9 @@ export function currentObjective(state: Readonly<GameState>): number {
   return state.scenario.completedAt.indexOf(-1);
 }
 
-/** Jours d'argent négatif restants avant la faillite, ou `null` si l'argent n'est pas en danger. */
+/** Jours d'argent négatif restants avant la faillite, ou `null` si l'argent n'est pas en danger (ou trop tard). */
 export function daysBeforeBankruptcy(state: Readonly<GameState>): number | null {
+  if (state.scenario.outcome !== 'playing') return null;
   if (state.scenario.debtDays === 0 && state.money >= 0) return null;
   return FIRST_STEPS.bankruptcyDays - state.scenario.debtDays;
 }

@@ -35,6 +35,12 @@ let lastSavedDay = session.state.stats.today.day;
 /** Partie dont l'écran de fin a déjà été montré. */
 let endShownFor: GameState | null = null;
 
+/** Vue de départ : l'entrée et la sortie, au bas de la carte, là où tout commence. */
+function showGates(state: Readonly<GameState>): void {
+  const { entrance, exit } = state.world;
+  renderer.setCameraPreset('mid', { x: (entrance.x + exit.x) / 2 + 0.5, z: entrance.y - 6 });
+}
+
 function replaceState(state: GameState): void {
   session.state = state;
   lastSavedDay = state.stats.today.day;
@@ -46,6 +52,7 @@ const actions: ScreenActions = {
   newGame() {
     // Seed tirée de l'horloge réelle : ici, hors de la simulation, c'est permis (règle n° 3).
     replaceState(createInitialState(Date.now() % 2_147_483_647 || 1));
+    showGates(session.state);
     ui.tutorial.setEnabled(true);
   },
   loadGame() {
@@ -76,6 +83,7 @@ const ui = createGameUi({
   dispatch: (command) => dispatchCommand(session.state, command),
   actions,
 });
+showGates(session.state);
 ui.screens.showTitle();
 const debugOverlay = new URLSearchParams(window.location.search).has('debug')
   ? createDebugOverlay(document.body)

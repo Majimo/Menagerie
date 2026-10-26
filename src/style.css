@@ -614,6 +614,7 @@ button:focus-visible {
     overflow-x: auto;
   }
   .tool-button {
+    flex: none;
     min-width: 52px;
     padding: 4px 2px;
     font-size: 0.75em;
@@ -934,12 +935,9 @@ button:focus-visible {
   stroke-width: 3;
 }
 
-/* Bulle de tutoriel : en bas à gauche, au-dessus de la barre d'outils et du sélecteur. */
+/* Bulle de tutoriel : dans la colonne de gauche, sous l'objectif et les alertes. */
 .tutorial {
-  position: fixed;
-  left: 12px;
-  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 156px);
-  width: min(360px, calc(100vw - 24px));
+  width: min(360px, 100%);
   padding: 10px 14px 12px;
   border: 3px solid var(--ui-accent);
   border-radius: 16px;
@@ -1104,10 +1102,12 @@ button:focus-visible {
     font-size: 0.75em;
   }
   .tutorial {
-    right: 12px;
     width: auto;
-    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 140px);
-    font-size: 0.9em;
+    padding: 8px 12px 10px;
+    font-size: 0.85em;
+  }
+  .tutorial-text {
+    margin: 4px 0 8px;
   }
   .screen {
     padding: 18px 16px;
