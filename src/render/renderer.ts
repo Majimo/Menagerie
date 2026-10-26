@@ -135,7 +135,7 @@ export function createRenderer(
       if (!silhouette) applyDaylight(daylight, timeOfDay(state.tick).hour);
       terrain.update(state.world);
       fences.update(state.world);
-      buildings.update(state.buildings);
+      buildings.update(state.buildings, state.world);
       viewSpots.update(state);
       const animate = !(options.reducedMotion || frozen);
       visitors.update({

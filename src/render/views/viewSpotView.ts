@@ -15,7 +15,7 @@ export interface ViewSpotView {
 
 export function createViewSpotView(): ViewSpotView {
   const group = new Group();
-  let revision = -1;
+  let last: ReturnType<typeof visitorNetwork> | null = null;
   const matrix = new Matrix4();
   const rotation = new Matrix4();
 
@@ -23,8 +23,9 @@ export function createViewSpotView(): ViewSpotView {
     group,
     update(state) {
       const network = visitorNetwork(state);
-      if (network.revision === revision) return;
-      revision = network.revision;
+      // Réseau mis en cache par état et révision : un nouvel objet = monde changé ou partie chargée.
+      if (network === last) return;
+      last = network;
       for (const child of [...group.children]) {
         group.remove(child);
         (child as InstancedMesh).dispose();

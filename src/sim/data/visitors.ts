@@ -1,4 +1,5 @@
-// Gabarits de visiteurs (docs/02) : l'enfant préfère les animaux mignons, se lasse et a faim plus vite, paie moitié prix.
+// Gabarits de visiteurs (docs/02) : l'enfant préfère les animaux mignons, se lasse, se fatigue et a faim plus vite,
+// paie moitié prix.
 
 export interface VisitorKindDef {
   /** Part des arrivées. */
@@ -11,6 +12,8 @@ export interface VisitorKindDef {
   patienceLossPerTick: number;
   /** Faim perdue par tick (100 = rassasié). */
   hungerLossPerTick: number;
+  /** Énergie perdue par tick, sauf assis ou en train de manger. */
+  energyLossPerTick: number;
   /** Poids de la « mignonnerie » d'une espèce dans l'intérêt (0 = ignorée). */
   cutenessWeight: number;
   /** Nombre d'enclos que le visiteur veut voir : [min, max]. */
@@ -27,6 +30,7 @@ export const VISITOR_KINDS = {
     walkSpeed: 0.2,
     patienceLossPerTick: 0.12,
     hungerLossPerTick: 0.07,
+    energyLossPerTick: 0.15,
     cutenessWeight: 0.3,
     views: [2, 5],
     variants: 6,
@@ -38,6 +42,7 @@ export const VISITOR_KINDS = {
     walkSpeed: 0.18,
     patienceLossPerTick: 0.2,
     hungerLossPerTick: 0.11,
+    energyLossPerTick: 0.24,
     cutenessWeight: 1,
     views: [2, 4],
     variants: 6,

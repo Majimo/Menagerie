@@ -29,11 +29,11 @@ describe('bancs', () => {
     );
   });
 
-  it('un visiteur fatigué va s’asseoir, puis repart avec sa patience retrouvée', () => {
+  it('un visiteur fatigué va s’asseoir, puis repart reposé et plus satisfait', () => {
     const state = zooWithBench(1);
     const network = visitorNetwork(state);
     const visitor = createVisitor(state, 'adult', network.entrance);
-    visitor.patience = 10;
+    visitor.energy = 10;
     visitor.hunger = 100;
     const states = new Set<string>();
     for (let i = 0; i < 200; i++) {
@@ -45,7 +45,7 @@ describe('bancs', () => {
     expect(visitor.state).toBe('resting');
     const satisfaction = visitor.satisfaction;
     for (let i = 0; i < balance.visitors.restTicks; i++) stepSimulation(state);
-    expect(visitor.patience).toBeGreaterThan(balance.visitors.restBelow);
+    expect(visitor.energy).toBeGreaterThan(balance.visitors.tiredBelow);
     expect(visitor.satisfaction).toBeGreaterThan(satisfaction);
   });
 
@@ -55,7 +55,7 @@ describe('bancs', () => {
     const seats = BUILDINGS.bench.seats;
     for (let i = 0; i < 8; i++) {
       const visitor = createVisitor(state, 'adult', network.entrance);
-      visitor.patience = 5;
+      visitor.energy = 5;
       visitor.hunger = 100;
     }
     let maxUse = 0;
@@ -66,17 +66,43 @@ describe('bancs', () => {
     expect(maxUse).toBe(seats);
   });
 
-  it('sans banc, un visiteur à bout de patience part mécontent ; avec un banc, il se repose et reste', () => {
+  it('fatigué et à bout de patience : sans banc il part mécontent, avec un banc il se repose et reste', () => {
     const outcome = (withBench: boolean) => {
       const state = withBench ? zooWithBench(3) : createInitialState(3);
       if (!withBench) buildVisitorZoo(state);
       const visitor = createVisitor(state, 'adult', visitorNetwork(state).entrance);
       visitor.patience = 0;
+      visitor.energy = 10;
       visitor.hunger = 100;
       stepSimulation(state);
       return { state: visitor.state, reason: visitor.leaveReason };
     };
     expect(outcome(false)).toEqual({ state: 'leaving', reason: 'impatient' });
     expect(outcome(true)).toEqual({ state: 'walkingToBench', reason: null });
+  });
+});
+
+describe('fatigue', () => {
+  it('l’enfant se fatigue plus vite que l’adulte ; fatigué et sans banc, il perd patience deux fois plus vite', () => {
+    const state = createInitialState(1);
+    buildVisitorZoo(state);
+    const entrance = visitorNetwork(state).entrance;
+    const adult = createVisitor(state, 'adult', entrance);
+    const child = createVisitor(state, 'child', entrance);
+    for (const v of [adult, child]) v.hunger = 100;
+    for (let i = 0; i < 100; i++) stepSimulation(state);
+    expect(child.energy).toBeLessThan(adult.energy);
+    const tired = createVisitor(state, 'adult', entrance);
+    const rested = createVisitor(state, 'adult', entrance);
+    tired.energy = 0;
+    for (const v of [tired, rested]) {
+      v.hunger = 100;
+      v.state = 'leaving';
+      v.goal = visitorNetwork(state).exit;
+      v.pathStatus = 'pending';
+    }
+    const before = { tired: tired.patience, rested: rested.patience };
+    for (let i = 0; i < 20; i++) stepSimulation(state);
+    expect(before.tired - tired.patience).toBeCloseTo(2 * (before.rested - rested.patience));
   });
 });

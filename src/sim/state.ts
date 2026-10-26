@@ -105,6 +105,8 @@ export interface Visitor {
   satisfaction: number;
   hunger: number;
   patience: number;
+  /** Énergie (100 = reposé) : baisse en marchant ; fatigué, le visiteur cherche un banc. */
+  energy: number;
   /** Enclos à voir avant de partir. */
   viewsWanted: number;
   /** Enclos déjà observés (un id par observation : sert à la lassitude). */

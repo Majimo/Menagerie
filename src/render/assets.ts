@@ -9,7 +9,7 @@ import {
 } from 'three';
 import { coloredBox, flatMaterial, merged, paint } from './geometry';
 import { createGiraffe, createLion, createPanda, createZebra } from './models/animals';
-import { bambooGeometry, feederGeometry, rockGeometry, treeGeometry } from './models/decor';
+import { bambooGeometry, benchGeometry, feederGeometry, rockGeometry, treeGeometry } from './models/decor';
 import { createVisitorModel, snackStandGeometry } from './models/visitors';
 import { palette } from './palette';
 
@@ -71,6 +71,7 @@ const procedural: Record<string, ProceduralFactory> = {
   'decor.rock': staticModel(rockGeometry),
   'decor.bamboo': staticModel(bambooGeometry),
   'building.snack': staticModel(snackStandGeometry),
+  'building.bench': staticModel(benchGeometry),
   'visitor.adult': () => createVisitorModel('adult'),
   'visitor.child': () => createVisitorModel('child'),
 };

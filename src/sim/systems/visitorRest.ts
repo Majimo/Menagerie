@@ -5,8 +5,8 @@ import type { Building, GameState, Visitor } from '../state';
 import { tileAt, tileIndex } from '../world/grid';
 import type { VisitorNetwork } from '../world/visitorNetwork';
 
-// Bancs : un visiteur fatigué s'assoit sur un banc libre, retrouve sa patience et gagne un peu de satisfaction.
-// Il reste donc plus longtemps, voit plus d'enclos et a plus souvent faim (snacks) au lieu de partir mécontent.
+// Bancs : un visiteur fatigué (énergie basse) s'assoit sur un banc libre, retrouve énergie et patience et gagne un
+// peu de satisfaction. Sans banc, la fatigue use sa patience : il part plus tôt, voit moins et achète moins.
 
 /** Visiteurs assis ou en route, par tuile de banc (`benchSpots`). Calculé une fois par tick, à la demande. */
 export type BenchUse = Map<number, number>;
@@ -36,7 +36,7 @@ export function benchAt(
 
 /** Le visiteur est-il assez fatigué pour chercher un banc ? */
 export function isTired(visitor: Readonly<Visitor>): boolean {
-  return visitor.patience < balance.visitors.restBelow;
+  return visitor.energy < balance.visitors.tiredBelow;
 }
 
 /** Tuile de banc libre la plus proche, ou -1. */
@@ -76,6 +76,7 @@ export function sitDown(state: Readonly<GameState>, network: VisitorNetwork, vis
 
 export function rest(visitor: Visitor): void {
   const v = balance.visitors;
+  visitor.energy = Math.min(100, visitor.energy + v.restEnergyPerTick);
   visitor.patience = Math.min(100, visitor.patience + v.restPatiencePerTick);
   visitor.satisfaction = Math.min(100, visitor.satisfaction + v.restSatisfactionPerTick);
   if (--visitor.stateTicks <= 0) visitor.state = 'wandering';

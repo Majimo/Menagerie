@@ -800,6 +800,15 @@ button:focus-visible {
 .swatch-snack {
   background: repeating-conic-gradient(#d2453a 0 45deg, #fff1d6 45deg 90deg);
 }
+/* Banc vu de face : dossier, assise et pieds sombres. */
+.swatch-bench {
+  border-radius: 3px;
+  background:
+    linear-gradient(#b07a45 0 0) 50% 22% / 90% 22% no-repeat,
+    linear-gradient(#b07a45 0 0) 50% 58% / 100% 18% no-repeat,
+    linear-gradient(#4a4a4f 0 0) 15% 100% / 12% 30% no-repeat,
+    linear-gradient(#4a4a4f 0 0) 85% 100% / 12% 30% no-repeat;
+}
 @media (max-width: 600px) {
   .alerts {
     top: 116px;

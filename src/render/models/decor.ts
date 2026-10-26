@@ -51,3 +51,23 @@ export function bambooGeometry(): BufferGeometry {
   ]);
   return merged(parts);
 }
+
+/** Hauteur de l'assise du banc : les visiteurs assis y posent le bassin (visitorView). */
+export const BENCH_SEAT_HEIGHT = 0.24;
+
+/** Banc de parc : assise le long de z, dossier côté −x ; on s'y assoit face à +x (l'allée). */
+export function benchGeometry(): BufferGeometry {
+  const wood = 0xb07a45;
+  const dark = 0x4a4a4f;
+  const parts: BufferGeometry[] = [
+    coloredBox([0.3, 0.05, 0.86], [0, BENCH_SEAT_HEIGHT, 0], wood),
+    coloredBox([0.05, 0.22, 0.86], [-0.17, BENCH_SEAT_HEIGHT + 0.16, 0], wood),
+  ];
+  for (const z of [-0.36, 0.36]) {
+    parts.push(
+      coloredBox([0.3, BENCH_SEAT_HEIGHT, 0.05], [0, BENCH_SEAT_HEIGHT / 2, z], dark),
+      coloredBox([0.05, 0.42, 0.05], [-0.17, 0.21 + 0.06, z], dark),
+    );
+  }
+  return merged(parts);
+}

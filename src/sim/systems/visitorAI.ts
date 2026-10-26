@@ -77,6 +77,10 @@ function updateVisitor(ctx: AiContext, visitor: Visitor): void {
   const v = balance.visitors;
   const def = VISITOR_KINDS[visitor.kind];
   if (visitor.state !== 'eating') visitor.hunger = Math.max(0, visitor.hunger - def.hungerLossPerTick);
+  if (visitor.state !== 'eating' && visitor.state !== 'resting') {
+    visitor.energy = Math.max(0, visitor.energy - def.energyLossPerTick);
+  }
+  const patienceLoss = def.patienceLossPerTick * (isTired(visitor) ? v.tiredPatienceFactor : 1);
   if (visitor.hunger < v.hungryBelow && ctx.network.snackSpots.length === 0) {
     visitor.satisfaction = Math.max(0, visitor.satisfaction - v.hungryNoFoodLossPerTick);
   }
@@ -95,7 +99,7 @@ function updateVisitor(ctx: AiContext, visitor: Visitor): void {
     case 'walkingToFood':
     case 'walkingToBench':
     case 'leaving':
-      visitor.patience = Math.max(0, visitor.patience - def.patienceLossPerTick);
+      visitor.patience = Math.max(0, visitor.patience - patienceLoss);
       travel(ctx, visitor);
       return;
     case 'viewing':

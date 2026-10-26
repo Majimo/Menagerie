@@ -2,6 +2,7 @@ import { balance } from './data/balance';
 import { isVisitorBlocked } from './entities/visitors';
 import type { EnclosureId, GameState } from './state';
 import { ledgerNet } from './systems/economy';
+import { daysBeforeBankruptcy } from './systems/objectives';
 import { visitorNetwork } from './world/visitorNetwork';
 
 // Problèmes à signaler au joueur, calculés à partir de l'état (pas stockés).
@@ -17,6 +18,8 @@ export interface ZooAlerts {
   hungryWithoutFood: number;
   /** Argent négatif, ou bilan d'hier négatif. */
   deficit: boolean;
+  /** Jours de rouge restants avant la faillite, `null` si l'argent n'est pas en danger. */
+  bankruptcyIn: number | null;
 }
 
 export function zooAlerts(state: Readonly<GameState>): ZooAlerts {
@@ -41,5 +44,6 @@ export function zooAlerts(state: Readonly<GameState>): ZooAlerts {
     blockedVisitors,
     hungryWithoutFood,
     deficit: state.money < 0 || (yesterday !== undefined && ledgerNet(yesterday) < 0),
+    bankruptcyIn: daysBeforeBankruptcy(state),
   };
 }

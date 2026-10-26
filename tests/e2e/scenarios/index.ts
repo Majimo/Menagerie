@@ -325,6 +325,36 @@ export const scenarios = {
     ],
     focus: { x: 20, y: 37 },
   },
+  /**
+   * Itération 4 : le zoo de `busy-day` avec des bancs le long de l'allée sud, en fin d'après-midi (17 h 48) : des
+   * visiteurs fatigués sont assis ; vue centrée sur les bancs proches de l'entrée.
+   */
+  'rest-stop': {
+    seed: 5,
+    money: 500_000,
+    rating: 4.2,
+    commands: [...busyDay(), ...[5, 8, 11, 15, 18, 29, 32, 35, 39, 42].map((x) => put('bench', x, 44))],
+    ticks: 490,
+    focus: { x: 16, y: 43 },
+  },
+  /**
+   * Itération 4 : faillite. Un petit zoo qui ne rapporte rien, endetté dès le départ : au bout de 10 fins de journée
+   * dans le rouge, la partie est perdue (écran de fin).
+   */
+  bankrupt: {
+    seed: 2,
+    money: -20_000,
+    commands: [
+      ...enclosure({
+        rect: [18, 32, 25, 38],
+        biome: 'savanna',
+        equipment: [water(18, 32), put('feeder', 25, 38), put('tree', 20, 34)],
+      }),
+      ...mainAlley(39, 16, 28),
+    ],
+    ticks: 10 * 1200 + 60,
+    focus: { x: 22, y: 38 },
+  },
   /** Carte pleine (mesure de performance) : 36 enclos peints, quadrillage de chemins. */
   'full-map': { seed: 1, commands: fullMap(), ticks: 10 },
 } satisfies Record<string, Scenario>;

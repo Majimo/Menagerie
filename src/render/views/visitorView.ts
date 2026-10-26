@@ -21,6 +21,7 @@ import type { Visitor, VisitorId } from '../../sim/state';
 import { getModel } from '../assets';
 import { flatMaterial } from '../geometry';
 import { moodIcon, type ShownMood } from '../icons';
+import { BENCH_SEAT_HEIGHT } from '../models/decor';
 import {
   createVisitorBody,
   VISITOR_PARTS,
@@ -31,7 +32,7 @@ import {
 
 // Visiteurs : un `InstancedMesh` par partie du corps et par gabarit (adulte, enfant), teinté par instance.
 // Position interpolée, décalage latéral propre à chaque visiteur (la foule ne marche pas en file indienne),
-// poses `walk`, `idle`, `watch`, bulles d'humeur et éclats de joie.
+// poses `walk`, `idle`, `watch`, `eat`, `sit` (sur un banc), bulles d'humeur et éclats de joie.
 
 /** Taille affichée d'une bulle d'humeur, en pixels CSS. */
 const BUBBLE_PX = 30;
@@ -43,6 +44,11 @@ const LANE = 0.3;
 const VIEW_FORWARD = 0.24;
 /** Les chemins sont légèrement surélevés (terrain.ts). */
 const PATH_TOP = 0.04;
+/** Un visiteur assis quitte sa tuile de chemin pour le banc voisin (une tuile plus loin) ; deux places. */
+const BENCH_FORWARD = 0.98;
+const BENCH_SEAT_OFFSET = 0.2;
+/** Jambes d'un visiteur assis : tendues vers l'avant, un peu tombantes. */
+const SIT_LEGS = 1.35;
 
 const TOPS: Record<VisitorKind, number[]> = {
   adult: [0x3f6fb5, 0xc0504d, 0x6a9f4b, 0xe0b040, 0x8a5fb0, 0xeeeae0, 0x2f4f6f, 0xd98a3a],
@@ -110,6 +116,15 @@ export function visitorDisplayPosition(
 ): { x: number; z: number } {
   const x = visitor.prevX + (visitor.x - visitor.prevX) * alpha;
   const z = visitor.prevY + (visitor.y - visitor.prevY) * alpha;
+  if (visitor.state === 'resting') {
+    // Sur le banc : `heading` (de la simulation) pointe de l'allée vers le banc ; une place par parité d'id.
+    const side = visitor.id % 2 === 0 ? BENCH_SEAT_OFFSET : -BENCH_SEAT_OFFSET;
+    const h = visitor.heading;
+    return {
+      x: x + Math.cos(h) * BENCH_FORWARD - Math.sin(h) * side,
+      z: z + Math.sin(h) * BENCH_FORWARD + Math.cos(h) * side,
+    };
+  }
   const lane = ((hash(visitor.id, 7) % 1000) / 1000 - 0.5) * 2 * LANE;
   const forward = visitor.state === 'viewing' ? VIEW_FORWARD : 0;
   return {
@@ -222,6 +237,9 @@ export function createVisitorView(): VisitorView {
             );
             s.heading += diff * Math.min(1, frame.deltaMs / 150);
           }
+          const sitting = visitor.state === 'resting';
+          // Assis, il tourne le dos au banc et regarde l'allée.
+          if (sitting) s.heading = visitor.heading + Math.PI;
           const { x, z } = visitorDisplayPosition(visitor, s.heading, frame.alpha);
           const moved = Math.hypot(x - s.lastX, z - s.lastZ);
           s.phase += (moved / (body.legLength * 1.1)) * Math.PI;
@@ -231,7 +249,9 @@ export function createVisitorView(): VisitorView {
           const joy = activeReaction(visitor, frame.tick) === 'joy';
           const hop =
             frame.animate && joy && visitor.kind === 'child' ? Math.abs(Math.sin(frame.now / 110)) * 0.08 : 0;
-          position.set(x, PATH_TOP + hop, z);
+          // Assis : le bassin (pivot des jambes, à `legLength`) se pose juste au-dessus de l'assise.
+          const seat = sitting ? BENCH_SEAT_HEIGHT + 0.03 - body.legLength - PATH_TOP : 0;
+          position.set(x, PATH_TOP + hop + seat, z);
           quaternion.setFromAxisAngle(up, -s.heading);
           root.compose(position, quaternion, unit);
           const angles = poseAngles(visitor, s.phase, frame, joy);
@@ -260,7 +280,7 @@ export function createVisitorView(): VisitorView {
             if (bubble.material !== material) bubble.material = material;
             const size = BUBBLE_PX * frame.worldPerPixel;
             bubble.scale.set(size, size, 1);
-            bubble.position.set(x, body.height + hop + 0.12 + size / 2, z);
+            bubble.position.set(x, body.height + hop + seat + 0.12 + size / 2, z);
           }
           if (joy && frame.animate) {
             const age = (frame.tick - visitor.reactionTick + frame.alpha) / balance.visitors.reactionTicks;
@@ -325,7 +345,10 @@ function poseAngles(
   const wave = (speed: number, amplitude: number) => (frame.animate ? Math.sin(t * speed) * amplitude : 0);
   const walking =
     visitor.pathStatus === 'ready' &&
-    (visitor.state === 'walkingToView' || visitor.state === 'walkingToFood' || visitor.state === 'leaving');
+    (visitor.state === 'walkingToView' ||
+      visitor.state === 'walkingToFood' ||
+      visitor.state === 'walkingToBench' ||
+      visitor.state === 'leaving');
   switch (true) {
     case walking: {
       const p = frame.animate ? phase : 1.2;
@@ -356,6 +379,14 @@ function poseAngles(
     }
     case visitor.state === 'eating':
       angles.armRight = 2.5 + wave(6, 0.15);
+      break;
+    case visitor.state === 'resting':
+      angles.legLeft = SIT_LEGS;
+      angles.legRight = SIT_LEGS;
+      angles.armLeft = 0.5;
+      angles.armRight = 0.5 + wave(0.8, 0.05);
+      angles.head = wave(0.5, 0.12);
+      angles.hair = angles.head;
       break;
     default:
       angles.armLeft = wave(1.3, 0.06);

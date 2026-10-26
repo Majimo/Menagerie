@@ -70,4 +70,17 @@ describe('scénarios de capture', () => {
     expect(alerts.deficit).toBe(true);
     expect(timeOfDay(state.tick).night).toBe(false);
   });
+
+  it('rest-stop : des visiteurs sont assis sur les bancs, de jour', () => {
+    const state = runScenario(scenarios['rest-stop']);
+    const resting = Object.values(state.visitors).filter((v) => v.state === 'resting');
+    expect(resting.length).toBeGreaterThan(4);
+    expect(timeOfDay(state.tick).night).toBe(false);
+  });
+
+  it('bankrupt : la partie est perdue après 10 jours dans le rouge, de jour', () => {
+    const state = runScenario(scenarios.bankrupt);
+    expect(state.scenario.outcome).toBe('lost');
+    expect(timeOfDay(state.tick).night).toBe(false);
+  });
 });

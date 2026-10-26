@@ -32,6 +32,7 @@ export function createVisitor(state: GameState, kind: VisitorKind, tile: number)
     satisfaction: v.startSatisfaction,
     hunger: v.startHunger[0] + nextFloat(state) * (v.startHunger[1] - v.startHunger[0]),
     patience: v.startPatience,
+    energy: v.startEnergy,
     viewsWanted: nextInt(state, def.views[0], def.views[1] + 1),
     seen: [],
     blockedTicks: 0,
