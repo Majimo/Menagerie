@@ -749,6 +749,9 @@ button:focus-visible {
   color: #8a6a12;
   letter-spacing: 1px;
 }
+.trend-arrow {
+  margin-right: 6px;
+}
 .price-row {
   font-weight: 700;
 }

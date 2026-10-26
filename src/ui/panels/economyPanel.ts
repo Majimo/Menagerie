@@ -9,13 +9,16 @@ import { formatRating, formatSigned, type TextKey, t } from '../i18n';
 import { icon } from '../icons';
 import type { PanelContent, PanelNavigation } from './types';
 
-// Panneau Économie : note du zoo et ce qui la compose, prix du billet et son effet, bilan du jour et de la veille.
+// Panneau Économie : note du zoo, note visée qu'elle rejoint et ce qui fixe celle-ci, prix du billet et son effet,
+// bilan du jour et de la veille.
 
 const PRICE_STEPS = [-5, -1, 1, 5];
 /** En dessous de ce facteur prix, le panneau prévient que le billet est trop cher. */
 const TOO_EXPENSIVE_BELOW = 0.6;
 
 export function economyPanel(state: Readonly<GameState>, nav: PanelNavigation): PanelContent {
+  // Note du zoo (celle de la barre du haut et des objectifs) et note visée, qu'elle rejoint jour après jour.
+  const rating = state.stats.rating;
   const breakdown = ratingBreakdown(state);
   const demand = visitorDemand(state);
   const { min, max } = balance.economy.ticketPrice;
@@ -64,10 +67,15 @@ export function economyPanel(state: Readonly<GameState>, nav: PanelNavigation): 
   return {
     title: t('economy.title'),
     body: [
-      h('h3', { className: 'rating-heading' }, [
-        h('span', { className: 'stars', text: stars(breakdown.rating), attrs: { 'aria-hidden': 'true' } }),
-        t('economy.rating', { rating: formatRating(breakdown.rating) }),
+      h('h3', { className: 'rating-heading', attrs: { 'data-testid': 'economy-rating' } }, [
+        h('span', { className: 'stars', text: stars(rating), attrs: { 'aria-hidden': 'true' } }),
+        t('economy.rating', { rating: formatRating(rating) }),
       ]),
+      ratingTrend(rating, breakdown.rating),
+      h('p', {
+        className: 'panel-note',
+        text: t('economy.rating.target', { rating: formatRating(breakdown.rating) }),
+      }),
       h('ul', { className: 'equipment' }, [
         h('li', { text: t('economy.rating.wellbeing', { value: Math.round(breakdown.wellbeing) }) }),
         h('li', { text: t('economy.rating.satisfaction', { value: Math.round(breakdown.satisfaction) }) }),
@@ -107,6 +115,18 @@ export function economyPanel(state: Readonly<GameState>, nav: PanelNavigation): 
 function stars(rating: number): string {
   const full = Math.round(rating);
   return '★'.repeat(full) + '☆'.repeat(5 - full);
+}
+
+/** Sens dans lequel la note évolue : flèche et texte, rien si elle a rejoint la note visée. */
+function ratingTrend(rating: number, target: number): HTMLElement | null {
+  const shown = formatRating(rating);
+  const aimed = formatRating(target);
+  if (shown === aimed) return null;
+  const rising = target > rating;
+  return h('p', { className: 'panel-note rating-trend', attrs: { 'data-testid': 'rating-trend' } }, [
+    h('span', { className: 'trend-arrow', text: rising ? '▲' : '▼', attrs: { 'aria-hidden': 'true' } }),
+    t(rising ? 'economy.rating.rising' : 'economy.rating.falling', { rating: aimed }),
+  ]);
 }
 
 function warning(text: string): HTMLElement {

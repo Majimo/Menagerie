@@ -24,6 +24,19 @@ test('le panneau Économie règle le prix du billet et annonce l’effet sur les
   await expect(page.getByTestId('inspector')).toContainText('Trop cher');
 });
 
+test('le panneau Économie affiche la note du zoo de la barre du haut et dit vers quoi elle tend', async ({
+  page,
+}) => {
+  // Scénario où la note du zoo (2,6) n'a pas encore rejoint la note visée (3,5).
+  await openGame(page, { scenario: 'four-species' });
+  await page.evaluate(() => window.__game?.freezeTime());
+  // La barre du haut doit d'abord afficher la note du scénario, pas celle de la partie précédente.
+  await expect(page.getByTestId('rating')).toHaveText('2,6');
+  await page.getByTestId('economy-button').click();
+  await expect(page.getByTestId('economy-rating')).toContainText('Note du zoo : 2,6 / 5');
+  await expect(page.getByTestId('rating-trend')).toContainText('En hausse vers 3,5');
+});
+
 test('en crise, les problèmes sont listés en haut de l’écran et mènent au bon panneau', async ({ page }) => {
   await openGame(page, { scenario: 'crisis' });
   const alerts = page.getByTestId('alerts');

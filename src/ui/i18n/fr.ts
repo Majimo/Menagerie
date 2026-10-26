@@ -37,6 +37,9 @@ export const fr = {
 
   'economy.title': 'Économie du zoo',
   'economy.rating': 'Note du zoo : {rating} / 5',
+  'economy.rating.rising': 'En hausse vers {rating} : la réputation se gagne jour après jour.',
+  'economy.rating.falling': 'En baisse vers {rating} : la réputation se perd plus vite qu’elle ne se gagne.',
+  'economy.rating.target': 'Note visée : {rating} / 5. Elle dépend de :',
   'economy.rating.wellbeing': 'Bien-être des animaux : {value} / 100',
   'economy.rating.satisfaction': 'Satisfaction des visiteurs (7 jours) : {value} / 100',
   'economy.rating.diversity': 'Espèces : {count} sur {cap}',
