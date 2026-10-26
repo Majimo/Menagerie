@@ -41,6 +41,24 @@ function polygon(ctx: CanvasRenderingContext2D, points: [number, number][]): voi
   ctx.closePath();
 }
 
+/** Tracé ouvert : comme `polygon`, sans le segment de fermeture. */
+function polyline(ctx: CanvasRenderingContext2D, points: [number, number][]): void {
+  for (const [i, [x, y]] of points.entries()) {
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+}
+
+/** « Z » ouvert dans le rectangle (x, y, w, h). */
+function zed(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  polyline(ctx, [
+    [x, y],
+    [x + w, y],
+    [x, y + h],
+    [x + w, y + h],
+  ]);
+}
+
 function glyphStyle(ctx: CanvasRenderingContext2D): void {
   ctx.fillStyle = LIGHT;
   ctx.strokeStyle = LIGHT;
@@ -107,25 +125,20 @@ const STATUS_DRAW: Record<Exclude<AnimalStatus, 'content'>, Draw> = {
     ctx.fillRect(41, 26, 14, 44);
     ctx.fillRect(26, 41, 44, 14);
   },
-  // Dort : nuage arrondi, « Z ».
+  // Dort : nuage arrondi, « Zzz » de taille décroissante qui monte vers la droite.
   sleeping: (ctx) => {
     outlined(ctx, STATUS_COLORS.sleeping, () => ctx.roundRect(6, 20, 84, 56, 28));
     glyphStyle(ctx);
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    polygon(ctx, [
-      [28, 36],
-      [50, 36],
-      [28, 62],
-      [50, 62],
-    ]);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(58, 44);
-    ctx.lineTo(70, 44);
-    ctx.lineTo(58, 58);
-    ctx.lineTo(70, 58);
-    ctx.stroke();
+    for (const [x, y, w, h, line] of [
+      [16, 40, 22, 26, 6],
+      [45, 36, 15, 18, 5],
+      [66, 31, 10, 12, 4.5],
+    ] as const) {
+      ctx.lineWidth = line;
+      ctx.beginPath();
+      zed(ctx, x, y, w, h);
+      ctx.stroke();
+    }
   },
   // Mort : pierre tombale, yeux en croix.
   dead: (ctx) => {
