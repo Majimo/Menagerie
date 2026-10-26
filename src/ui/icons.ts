@@ -20,16 +20,23 @@ const PATHS = {
   star: 'M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8L12 3.5Z',
   person: 'M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5.5 20.5c0-3.8 2.9-6.5 6.5-6.5s6.5 2.7 6.5 6.5',
   alert: 'M12 3.5 2.5 20h19L12 3.5ZM12 9.5v5M12 17.2v.3',
+  menu: 'M4 6.5h16M4 12h16M4 17.5h16',
+  target: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9ZM12 11.2v1.6',
+  check: 'M4.5 12.5l5 5L19.5 7',
+  todo: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z',
+  help: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM9.3 9.4a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2.9-1.2 1.8v.4M12 17v.3',
 } as const;
 
 export type IconId = keyof typeof PATHS;
 
-export function icon(id: IconId): SVGSVGElement {
+/** `extraClass` : classe de style propre à l'emplacement (taille, couleur). */
+export function icon(id: IconId, extraClass?: string): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   svg.classList.add('icon');
+  if (extraClass) svg.classList.add(extraClass);
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', PATHS[id]);
   svg.append(path);

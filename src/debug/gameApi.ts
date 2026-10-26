@@ -50,6 +50,7 @@ interface GameApiDeps {
   inspector: Inspector;
   firstFrame: Promise<void>;
   pauseRealTime(): void;
+  prepareScenario(): void;
 }
 
 const center = (tile: TileCoord) => ({ x: tile.x + 0.5, z: tile.y + 0.5 });
@@ -61,6 +62,7 @@ export function installGameApi({
   inspector,
   firstFrame,
   pauseRealTime,
+  prepareScenario,
 }: GameApiDeps): void {
   let focus: TileCoord | undefined;
   window.__game = {
@@ -69,6 +71,7 @@ export function installGameApi({
       const scenario = scenarios[name as keyof typeof scenarios];
       if (!scenario) throw new Error(`Scénario inconnu : ${name}`);
       pauseRealTime();
+      prepareScenario();
       tools.select(null);
       inspector.select(null);
       session.state = runScenario(scenario);

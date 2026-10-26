@@ -1,12 +1,15 @@
 import './style.css';
 import { attachInput } from './input';
+import { readSave, writeSave } from './persistence/storage';
 import { createRenderer } from './render/renderer';
 import type { Session } from './session';
 import { createClock, tickFraction, ticksDue } from './sim/clock';
 import { dispatchCommand, stepSimulation } from './sim/simulation';
-import { createInitialState } from './sim/state';
+import { createInitialState, type GameState } from './sim/state';
 import { createGameUi, setupShell } from './ui';
 import { createDebugOverlay } from './ui/debugOverlay';
+import { t } from './ui/i18n';
+import type { ScreenActions } from './ui/screens';
 import { createGameSpeed, SPEEDS } from './ui/timeControls';
 import { createToolController } from './ui/tools';
 
@@ -26,6 +29,44 @@ const tools = createToolController(
   (command) => dispatchCommand(session.state, command),
 );
 const speed = createGameSpeed();
+
+/** Dernier jour sauvegardé automatiquement (sauvegarde à chaque changement de jour). */
+let lastSavedDay = session.state.stats.today.day;
+/** Partie dont l'écran de fin a déjà été montré. */
+let endShownFor: GameState | null = null;
+
+function replaceState(state: GameState): void {
+  session.state = state;
+  lastSavedDay = state.stats.today.day;
+  tools.select(null);
+  ui.inspector.select(null);
+}
+
+const actions: ScreenActions = {
+  newGame() {
+    // Seed tirée de l'horloge réelle : ici, hors de la simulation, c'est permis (règle n° 3).
+    replaceState(createInitialState(Date.now() % 2_147_483_647 || 1));
+    ui.tutorial.setEnabled(true);
+  },
+  loadGame() {
+    const result = readSave();
+    if (!result) return t('menu.noSave');
+    if (!result.ok) return t('title.loadError', { reason: t(`save.${result.error}`) });
+    replaceState(result.state);
+    ui.tutorial.setEnabled(true);
+    ui.notify(t('notice.loaded', { day: result.state.stats.today.day }));
+    return null;
+  },
+  saveGame() {
+    const { state } = session;
+    return writeSave(state) ? t('menu.saved', { day: state.stats.today.day }) : t('menu.saveFailed');
+  },
+  savedDay() {
+    const result = readSave();
+    return result?.ok ? result.state.stats.today.day : null;
+  },
+};
+
 const ui = createGameUi({
   root: uiRoot,
   tools,
@@ -33,7 +74,9 @@ const ui = createGameUi({
   speed,
   reducedMotion,
   dispatch: (command) => dispatchCommand(session.state, command),
+  actions,
 });
+ui.screens.showTitle();
 const debugOverlay = new URLSearchParams(window.location.search).has('debug')
   ? createDebugOverlay(document.body)
   : null;
@@ -86,8 +129,20 @@ const firstFrame = new Promise<void>((resolve) => {
 function frame(now: number): void {
   const delta = lastFrame < 0 ? 0 : now - lastFrame;
   lastFrame = now;
-  const due = ticksDue(clock, delta, realTimeSuspended ? 0 : speed.factor);
+  // La partie s'arrête sous un écran modal (titre, menu, fin) et après une défaite.
+  const halted = realTimeSuspended || ui.screens.blocking || session.state.scenario.outcome !== 'playing';
+  const due = ticksDue(clock, delta, halted ? 0 : speed.factor);
   for (let i = 0; i < due; i++) stepSimulation(session.state);
+  const { state } = session;
+  if (state.stats.today.day !== lastSavedDay) {
+    lastSavedDay = state.stats.today.day;
+    // Sauvegarde automatique en fin de journée ; jamais une partie perdue, ni pendant les tests.
+    if (!realTimeSuspended && state.scenario.outcome === 'playing') writeSave(state);
+  }
+  if (state.scenario.outcome === 'lost' && endShownFor !== state) {
+    endShownFor = state;
+    ui.screens.showEnd(state);
+  }
   renderer.render(session.state, {
     preview: tools.preview(session.state),
     now,
@@ -113,6 +168,11 @@ if (import.meta.env.DEV) {
       inspector: ui.inspector,
       pauseRealTime: () => {
         realTimeSuspended = true;
+      },
+      // Scénario de démonstration : ni écran titre, ni tutoriel.
+      prepareScenario: () => {
+        ui.screens.closeAll();
+        ui.tutorial.setEnabled(false);
       },
     }),
   );

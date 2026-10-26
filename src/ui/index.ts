@@ -9,10 +9,13 @@ import { errorText, formatMoney, t } from './i18n';
 import { icon } from './icons';
 import { createInspector, type Inspector } from './inspector';
 import { createNotices } from './notices';
+import { createObjectivesCard } from './objectives';
+import { createScreens, type ScreenActions, type Screens } from './screens';
 import { createTimeControls, type GameSpeed } from './timeControls';
 import { createToolbar } from './toolbar';
 import type { ToolController, ToolOutcome } from './tools';
 import { tileUnder } from './toolTargets';
+import { createTutorial, type Tutorial } from './tutorial';
 import { createZooStatus } from './zooStatus';
 
 // Coquille DOM de l'application et interface de jeu en surimpression du canvas.
@@ -26,6 +29,10 @@ export function setupShell(canvas: HTMLCanvasElement): void {
 
 export interface GameUi {
   readonly inspector: Inspector;
+  readonly screens: Screens;
+  readonly tutorial: Tutorial;
+  /** Message d'information annoncé (chargement d'une partie…). */
+  notify(text: string): void;
   /** À chaque frame : argent, horloge, info-bulle, panneau d'inspection, annonces. */
   update(state: Readonly<GameState>, now: number): void;
   /** Résultat d'un placement : message clair si quelque chose a été refusé. */
@@ -39,37 +46,66 @@ interface GameUiDeps {
   speed: GameSpeed;
   reducedMotion: boolean;
   dispatch: (command: Command) => CommandResult;
+  actions: ScreenActions;
 }
 
-export function createGameUi({ root, tools, renderer, speed, reducedMotion, dispatch }: GameUiDeps): GameUi {
+export function createGameUi({
+  root,
+  tools,
+  renderer,
+  speed,
+  reducedMotion,
+  dispatch,
+  actions,
+}: GameUiDeps): GameUi {
   const status = createZooStatus(() =>
     inspector.select(inspector.selection?.kind === 'economy' ? null : { kind: 'economy' }),
   );
   const money = createMoneyDisplay(root, reducedMotion, [status.el]);
   const inspector = createInspector(root, dispatch);
-  const alerts = createAlertsBar(root, inspector);
+  const toast = createToast(root);
+  // Colonne de gauche, sous l'argent : objectif en cours, puis problèmes du zoo.
+  const objectives = createObjectivesCard(toast);
+  const column = h('div', { className: 'hud-left' }, [objectives.el]);
+  root.append(column);
+  const alerts = createAlertsBar(column, inspector);
   const zooButton = h('button', {
     className: 'zoo-button',
     attrs: { 'data-testid': 'zoo-button', 'aria-label': t('zoo.button'), title: t('zoo.button.help') },
     onClick: () => inspector.select(inspector.selection?.kind === 'zoo' ? null : { kind: 'zoo' }),
   });
   zooButton.append(icon('list'), h('span', { text: t('zoo.button') }));
-  const clock = createTimeControls(root, speed, [zooButton]);
+  const screens = createScreens(root, actions);
+  const menuButton = h(
+    'button',
+    {
+      className: 'zoo-button',
+      attrs: { 'data-testid': 'menu-button', 'aria-label': t('menu.button'), title: t('menu.button') },
+      onClick: () => screens.showMenu(),
+    },
+    [icon('menu'), h('span', { text: t('menu.button') })],
+  );
+  const clock = createTimeControls(root, speed, [zooButton, menuButton]);
   createCameraControls(root, renderer.camera);
   createToolbar(root, tools);
-  const toast = createToast(root);
+  const tutorial = createTutorial(root);
   const tooltip = createTooltip(root);
   const notices = createNotices(toast);
   let lastState: Readonly<GameState> | null = null;
 
   return {
     inspector,
+    screens,
+    tutorial,
+    notify: (text) => toast.show(text, 'info'),
     update(state, now) {
       if (state !== lastState) money.reset();
       lastState = state;
       money.update(state.money);
       status.update(state);
       alerts.update(state, now);
+      objectives.update(state, now);
+      tutorial.update(state, now);
       clock.update(state.tick);
       inspector.update(state, now);
       notices.update(state);

@@ -31,6 +31,9 @@ export const fr = {
   'alert.exitUnreachable.help': 'Reliez la sortie à l’entrée par un chemin, sinon aucun visiteur ne vient.',
   'alert.hungry': '{count} visiteur(s) affamé(s)',
   'alert.hungry.help': 'Posez un stand de snacks au bord d’un chemin.',
+  'alert.bankruptcy': 'Faillite dans {days} jour(s)',
+  'alert.bankruptcy.help':
+    'Chaque fin de journée dans le rouge rapproche la faillite. Réduisez les dépenses ou attirez plus de visiteurs.',
 
   'economy.title': 'Économie du zoo',
   'economy.rating': 'Note du zoo : {rating} / 5',
@@ -95,6 +98,7 @@ export const fr = {
   'leave.blocked': 'bloqué, abandonne',
   'gauge.satisfaction': 'Satisfaction',
   'gauge.patience': 'Patience',
+  'gauge.energy': 'Énergie',
 
   'toolbar.label': 'Construction',
   'tool.path': 'Chemin',
@@ -243,9 +247,78 @@ export const fr = {
   'error.incompatibleSpecies':
     'Impossible : {species} ne peut pas vivre avec {other}. Carnivores et herbivores ont des enclos séparés.',
   'error.groupFull': 'Enclos complet pour {species} : {max} au plus par enclos.',
-  'error.notBesidePath': 'Le stand doit toucher un chemin pour que les visiteurs y accèdent.',
+  'error.notBesidePath': 'Cet objet doit toucher un chemin pour que les visiteurs y accèdent.',
   'error.insideEnclosure': 'Pas dans un enclos : les visiteurs n’y entrent pas.',
   'error.invalidPrice': 'Le prix du billet va de 5 à 50.',
+
+  // Écran titre, menu, fin de partie.
+  'title.tagline': 'Construisez le zoo dont rêvent les visiteurs.',
+  'title.new': 'Nouvelle partie',
+  'title.continue': 'Continuer (jour {day})',
+  'title.howTo':
+    'Tracez des chemins, fermez des enclos, accueillez des animaux heureux : les visiteurs paieront pour les voir.',
+  'title.controls':
+    'Choisissez un outil puis glissez pour construire. Sans outil, glissez pour déplacer la vue ; molette ou pincement pour zoomer ; espace pour la pause.',
+  'title.loadError': 'Sauvegarde illisible : {reason}',
+  'menu.button': 'Menu',
+  'menu.title': 'Menu',
+  'menu.resume': 'Reprendre',
+  'menu.save': 'Sauvegarder',
+  'menu.load': 'Charger la sauvegarde',
+  'menu.new': 'Nouvelle partie',
+  'menu.newConfirm': 'Recommencer ? La partie en cours sera perdue si elle n’est pas sauvegardée.',
+  'menu.newConfirmYes': 'Oui, recommencer',
+  'menu.saved': 'Partie sauvegardée (jour {day}).',
+  'menu.saveFailed': 'Impossible de sauvegarder : stockage du navigateur indisponible.',
+  'menu.noSave': 'Aucune sauvegarde.',
+  'menu.autosave': 'Sauvegarde automatique à chaque fin de journée.',
+  'save.invalid': 'fichier abîmé ou étranger',
+  'save.tooOld': 'version trop ancienne',
+  'save.tooNew': 'version plus récente que le jeu',
+  'notice.autosaved': 'Partie sauvegardée.',
+  'notice.loaded': 'Partie chargée : jour {day}.',
+  'end.lost.title': 'Faillite',
+  'end.lost.text':
+    'Le zoo est resté dans le rouge {days} jours de suite : la banque ferme les portes au jour {day}.',
+  'end.lost.objectives': 'Objectifs atteints : {done} sur {total}.',
+  'end.lost.tip':
+    'Conseil : des enclos spacieux au bon sol, avec eau, nourrisseur et décor, rendent les animaux heureux ; un billet au prix accepté attire du monde.',
+  'end.retry': 'Nouvelle partie',
+  'end.load': 'Charger la dernière sauvegarde',
+
+  // Objectifs du scénario « Premiers pas ».
+  'objectives.title': 'Objectifs',
+  'objectives.progress': 'Objectif {index} sur {total}',
+  'objectives.sandbox': 'Objectifs atteints : bac à sable !',
+  'objectives.sandbox.help': 'Continuez à agrandir le zoo librement.',
+  'objectives.done': 'Atteint',
+  'objectives.todo': 'À faire',
+  'objectives.toggle': 'Afficher tous les objectifs',
+  'objective.twoSpecies': 'Accueillir 2 espèces',
+  'objective.hundredVisitors': 'Recevoir 100 visiteurs en un jour',
+  'objective.threeStars': 'Atteindre 3 étoiles',
+  'objective.fourSpeciesFourStars': 'Accueillir 4 espèces et atteindre 4 étoiles',
+  'condition.species': '{value} / {min} espèces',
+  'condition.visitorsInDay': '{value} / {min} visiteurs aujourd’hui',
+  'condition.rating': '{value} / {min} étoiles',
+  'notice.objective': 'Objectif atteint : {name} !',
+  'notice.sandbox': 'Tous les objectifs sont atteints. Le zoo est à vous : bac à sable !',
+  'notice.bankruptcy': 'Attention : faillite dans {days} jour(s) si l’argent reste négatif.',
+
+  // Tutoriel : bulles d'aide contextuelles.
+  'tutorial.label': 'Aide',
+  'tutorial.next': 'Compris',
+  'tutorial.skip': 'Passer le tutoriel',
+  'tutorial.path':
+    'Les visiteurs entrent et sortent par les deux portes en bas de la carte. Avec l’outil Chemin, tracez une allée qui les relie.',
+  'tutorial.enclosure':
+    'Avec l’outil Clôture, fermez un enclos le long de l’allée : les visiteurs regardent depuis le chemin.',
+  'tutorial.animals':
+    'Équipez l’enclos (Peindre : savane et eau ; Objet : nourrisseur et arbres), puis achetez deux zèbres avec l’outil Animal.',
+  'tutorial.watch':
+    'Les visiteurs arrivent ! Cliquez sur un animal ou un visiteur pour voir ce qu’il ressent. Le bouton de note règle le billet.',
+  'tutorial.comfort':
+    'Visiteurs affamés ou fatigués ? Un stand de snacks et des bancs au bord du chemin les font rester (et dépenser).',
 
   'species.zebra': 'Zèbre',
   'species.giraffe': 'Girafe',

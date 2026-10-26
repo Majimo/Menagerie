@@ -688,9 +688,6 @@ button:focus-visible {
   margin-right: 6px;
 }
 .alerts {
-  position: fixed;
-  top: 68px;
-  left: 12px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -811,15 +808,275 @@ button:focus-visible {
 }
 @media (max-width: 600px) {
   .alerts {
-    top: 116px;
     flex-direction: row;
     flex-wrap: wrap;
   }
   .alert-chip {
     font-size: 0.8em;
   }
-  /* Écran étroit : un panneau ouvert remplace le bandeau d'alertes (on l'ouvre souvent depuis une alerte). */
-  body:has(.inspector:not([hidden])) .alerts {
+}
+
+/* --- Itération 4 : objectifs, tutoriel, écrans ------------------------------------------------------ */
+
+/* Colonne de gauche, sous l'argent : objectif en cours puis alertes. Les vides laissent passer le pointeur. */
+#ui > .hud-left {
+  position: fixed;
+  top: 68px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 24px));
+  pointer-events: none;
+}
+.hud-left > * {
+  pointer-events: auto;
+}
+.objectives {
+  background: var(--ui-cream);
+  border: 2px solid rgb(45 42 36 / 15%);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(45 42 36 / 18%);
+  overflow: hidden;
+}
+.objectives-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.objectives-target {
+  grid-row: span 2;
+  color: var(--ui-accent);
+}
+.objectives-text {
+  display: flex;
+  flex-direction: column;
+}
+.objectives-summary {
+  font-weight: 700;
+  font-size: 0.9em;
+}
+.objectives-detail {
+  color: var(--ui-ink-soft);
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+}
+.objectives-bar {
+  grid-column: 2;
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(45 42 36 / 12%);
+  overflow: hidden;
+}
+.objectives-bar[hidden] {
+  display: none;
+}
+.objectives-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--ui-accent);
+}
+.objectives[data-sandbox="true"] .objectives-target {
+  color: #8a6a12;
+}
+.objectives-list {
+  margin: 0;
+  padding: 4px 12px 10px;
+  list-style: none;
+  border-top: 2px solid rgb(45 42 36 / 10%);
+  font-size: 0.85em;
+}
+.objectives-list[hidden] {
+  display: none;
+}
+.objectives-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+.objective-icon {
+  width: 20px;
+  height: 20px;
+}
+.objectives-list [data-done="true"] {
+  color: #2b6b42;
+  font-weight: 700;
+}
+.objectives-list [data-done="true"] .objective-icon {
+  stroke-width: 3;
+}
+
+/* Bulle de tutoriel : en bas à gauche, au-dessus de la barre d'outils et du sélecteur. */
+.tutorial {
+  position: fixed;
+  left: 12px;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 156px);
+  width: min(360px, calc(100vw - 24px));
+  padding: 10px 14px 12px;
+  border: 3px solid var(--ui-accent);
+  border-radius: 16px;
+  background: var(--ui-cream);
+  box-shadow: 0 6px 18px rgb(45 42 36 / 25%);
+}
+.tutorial[hidden] {
+  display: none;
+}
+.tutorial-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-accent);
+  font-weight: 700;
+  font-size: 0.85em;
+}
+.tutorial-icon {
+  width: 20px;
+  height: 20px;
+}
+.tutorial-text {
+  margin: 6px 0 10px;
+  line-height: 1.4;
+}
+.tutorial-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tutorial-next,
+.tutorial-skip,
+.screen-button {
+  min-height: 44px;
+  padding: 6px 16px;
+  border: 2px solid rgb(45 42 36 / 30%);
+  border-radius: 12px;
+  background: var(--ui-cream-strong);
+  font-weight: 700;
+}
+.tutorial-next,
+.screen-button.primary {
+  border-color: #2b6b42;
+  background: var(--ui-accent);
+  color: #fff;
+}
+.tutorial-skip {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ui-ink-soft);
+  text-decoration: underline;
+}
+
+/* Écrans modaux (<dialog>) : titre, menu, fin de partie. */
+.screen {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 24px 28px;
+  border: 2px solid rgb(45 42 36 / 15%);
+  border-radius: 20px;
+  background: var(--ui-cream);
+  color: var(--ui-ink);
+  box-shadow: 0 12px 40px rgb(45 42 36 / 35%);
+  text-align: center;
+}
+.screen::backdrop {
+  background: rgb(45 42 36 / 45%);
+}
+.screen h2 {
+  margin: 0 0 12px;
+}
+.title-name {
+  font-size: 3em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #2b6b42;
+}
+.title-animals {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+.title-animals img {
+  width: 48px;
+  height: 48px;
+}
+.title-tagline {
+  margin: 0 0 20px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+.screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+}
+.screen-actions.vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+.screen-message {
+  min-height: 1.3em;
+  margin: 4px 0;
+  font-weight: 700;
+}
+.screen-help {
+  margin: 10px 0 0;
+  color: var(--ui-ink-soft);
+  font-size: 0.88em;
+  line-height: 1.45;
+}
+.end-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: #a8321f;
+}
+.end-icon {
+  width: 32px;
+  height: 32px;
+  fill: #fde0d8;
+}
+
+@media (max-width: 600px) {
+  #ui > .hud-left {
+    top: 116px;
+  }
+  .objectives-toggle {
+    min-height: 44px;
+    padding: 4px 10px;
+  }
+  .objectives-summary {
+    font-size: 0.8em;
+  }
+  .objectives-detail {
+    font-size: 0.75em;
+  }
+  .tutorial {
+    right: 12px;
+    width: auto;
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 140px);
+    font-size: 0.9em;
+  }
+  .screen {
+    padding: 18px 16px;
+  }
+  .title-name {
+    font-size: 2.4em;
+  }
+  /* Écran étroit : un panneau ouvert remplace la colonne (on l'ouvre souvent depuis une alerte). */
+  body:has(.inspector:not([hidden])) #ui > .hud-left {
     display: none;
   }
 }

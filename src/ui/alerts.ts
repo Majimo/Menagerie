@@ -72,6 +72,14 @@ export function createAlertsBar(parent: HTMLElement, nav: PanelNavigation): Aler
 function alertItems(state: Readonly<GameState>): AlertItem[] {
   const alerts = zooAlerts(state);
   const items: AlertItem[] = [];
+  if (alerts.bankruptcyIn !== null) {
+    items.push({
+      id: 'bankruptcy',
+      text: t('alert.bankruptcy', { days: alerts.bankruptcyIn }),
+      help: t('alert.bankruptcy.help'),
+      target: { kind: 'economy' },
+    });
+  }
   if (alerts.blockedVisitors > 0) {
     const first = Object.values(state.visitors).find((v) => isVisitorBlocked(state, v));
     items.push({

@@ -42,6 +42,7 @@ export function visitorPanel(
         gauge('gauge.satisfaction', visitor.satisfaction, 30),
         gauge('gauge.hunger', visitor.hunger, v.hungryBelow),
         gauge('gauge.patience', visitor.patience, 25),
+        gauge('gauge.energy', visitor.energy, v.tiredBelow),
       ]),
       h('p', {
         className: 'panel-note',

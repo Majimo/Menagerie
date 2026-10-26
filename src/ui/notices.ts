@@ -1,11 +1,12 @@
 import { deathCause } from '../sim/entities';
 import type { AnimalId, GameState } from '../sim/state';
 import { ledgerNet } from '../sim/systems/economy';
+import { daysBeforeBankruptcy } from '../sim/systems/objectives';
 import type { Toast } from './feedback';
 import { formatSigned, t } from './i18n';
 
-// Annonces des événements de la partie (mort d'un animal, bilan de fin de journée), lues par les lecteurs d'écran
-// via le message `aria-live`.
+// Annonces des événements de la partie (mort d'un animal, bilan de fin de journée, faillite proche), lues par les
+// lecteurs d'écran via le message `aria-live`.
 
 export interface Notices {
   update(state: Readonly<GameState>): void;
@@ -31,13 +32,17 @@ export function createNotices(toast: Toast): Notices {
       if (state.stats.today.day !== lastDay) {
         lastDay = state.stats.today.day;
         const ended = state.stats.history[state.stats.history.length - 1];
+        const bankruptcy = state.scenario.debtDays > 0 ? daysBeforeBankruptcy(state) : null;
         if (ended)
           toast.show(
-            t('notice.dayEnd', {
-              day: ended.day,
-              net: formatSigned(ledgerNet(ended)),
-              count: ended.visitors,
-            }),
+            [
+              t('notice.dayEnd', {
+                day: ended.day,
+                net: formatSigned(ledgerNet(ended)),
+                count: ended.visitors,
+              }),
+              bankruptcy !== null && bankruptcy > 0 ? t('notice.bankruptcy', { days: bankruptcy }) : '',
+            ].join(' '),
             'info',
           );
       }
