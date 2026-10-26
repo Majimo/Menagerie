@@ -305,6 +305,22 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
 - **Conséquences** : après un changement visuel voulu, `npx playwright test regression --update-snapshots`. Les e2e ne
   tournent pas encore en CI.
 
+## ADR-034 : Palier V0.2 en premier, une roadmap par palier
+- **Statut** : accepté (après le POC, validé par Pierre le 2026-10-26)
+- **Décision** : ordre des paliers V0.2 « Contenu et vie du zoo », puis V0.3 (personnel), puis V0.4 (progression) : le
+  playtest confirme que le fun tient à « placer un animal de plus », et un zoo complet accumule ~2 000 par jour sans
+  rien à acheter. V0.2 est détaillé dans `docs/10-roadmap-v0.2.md`, en itérations 5 à 11 numérotées à la suite du POC
+  (`/jalon-suivant N` et `artifacts/review/<N>.md` restent valables). Chaque palier aura son fichier, écrit au moment de
+  le commencer ; les règles restent dans `02-regles-du-jeu-poc.md`. Choix du palier :
+  - le sable devient le biome désert, une simple tuile de sol (deux sols ajoutés seulement : neige et jungle) ;
+  - douze espèces, kangourou compris ; cohabitation par `predator` au lieu du régime ;
+  - un seul abri d'enclos protège du froid comme du chaud ;
+  - pour éviter un zoo trop serré, achat de parcelles 12×12 autour du bloc de départ 48×48, jusqu'à 96×96, à un prix
+    croissant équilibré avec les autres achats (itération 7) ;
+  - toutes les espèces disponibles dès le départ jusqu'à la recherche de V0.4.
+- **Conséquences** : la commande `/jalon-suivant` lit le palier en cours dans la section « Statut » de `README.md`.
+  Les cartes au-delà de 96×96 restent en V0.5. L'ordre V0.3 puis V0.4 peut encore changer si le playtest de V0.2 le demande.
+
 ---
 
 ## Journal des playtests

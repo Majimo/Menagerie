@@ -52,6 +52,7 @@ Lire dans cet ordre :
 7. [`docs/07-deploiement.md`](docs/07-deploiement.md) : web, desktop, mobile
 8. [`docs/08-decisions.md`](docs/08-decisions.md) : journal des décisions techniques
 9. [`docs/09-verification-visuelle-et-accessibilite.md`](docs/09-verification-visuelle-et-accessibilite.md) : captures d'écran, revue visuelle et ludique, accessibilité
+10. [`docs/10-roadmap-v0.2.md`](docs/10-roadmap-v0.2.md) : palier V0.2 (contenu et vie du zoo), itérations 5 à 11
 
 `CLAUDE.md` contient les consignes de travail pour Claude Code.
 
@@ -62,11 +63,23 @@ la vérifie et la clôture. On peut aussi cibler une itération : `/jalon-suivan
 
 ## Statut
 
+POC ([`docs/05-roadmap-poc.md`](docs/05-roadmap-poc.md)) : terminé.
+
 - [x] Itération 0 : setup
 - [x] Itération 1 : monde, caméra, construction
 - [x] Itération 2 : animaux
 - [x] Itération 3 : visiteurs et économie
 - [x] Itération 4 : boucle de jeu, équilibrage, sauvegarde
+
+Palier V0.2, contenu et vie du zoo ([`docs/10-roadmap-v0.2.md`](docs/10-roadmap-v0.2.md)) : en cours.
+
+- [ ] Itération 5 : nouveaux biomes et trois espèces
+- [ ] Itération 6 : ménagerie élargie
+- [ ] Itération 7 : agrandir le zoo (parcelles)
+- [ ] Itération 8 : âge et comportements
+- [ ] Itération 9 : services aux visiteurs
+- [ ] Itération 10 : saisons, climat et météo
+- [ ] Itération 11 : événements, objectifs et équilibrage V0.2
 
 ## Licences des assets
 

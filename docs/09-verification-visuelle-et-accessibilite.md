@@ -46,6 +46,9 @@ Ils sont introduits au fil des itérations :
 | `crisis` | argent négatif, animal mort, visiteurs en colère | 3 à 4 |
 | `tutorial-start` | écran d'accueil et première aide contextuelle | 4 |
 
+Scénarios prévus pour le palier V0.2 (`new-biomes`, `menagerie`, `land-expansion`, `behaviours`, `services`, `seasons`, `events`) :
+voir `10-roadmap-v0.2.md` ; chacun rejoint ce tableau à la clôture de son itération.
+
 ## Captures
 
 - **Viewports** : desktop 1280×720, grand écran 1920×1080, mobile portrait 390×844.

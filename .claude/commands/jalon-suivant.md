@@ -16,10 +16,14 @@ Pierre suit la session en direct. Une longue suite d'appels d'outils sans texte 
 
 ## 1. Identifier le jalon
 
-- Lis `CLAUDE.md`, puis la section « Statut » de `README.md` et `docs/05-roadmap-poc.md`.
+- Lis `CLAUDE.md`, puis la section « Statut » de `README.md` : elle indique le palier en cours et son fichier de roadmap
+  (`docs/05-roadmap-poc.md` pour les itérations 0 à 4, `docs/10-roadmap-v0.2.md` pour les itérations 5 à 11).
+  Lis les « Règles communes du palier » de ce fichier s'il en a.
 - Si `$ARGUMENTS` contient un numéro d'itération, prends celui-ci. Sinon, prends **la première itération dont les critères d'acceptation ne sont pas tous cochés**.
-- Si tout le POC est terminé, lis `docs/06-roadmap-suite.md`, propose le palier suivant avec un découpage en itérations
-  (même format que `05-roadmap-poc.md`), ajoute-le à `docs/05-roadmap-poc.md` ou dans un nouveau fichier de roadmap, et **arrête-toi** pour validation.
+- Si tout le palier en cours est terminé, lis `docs/06-roadmap-suite.md`, propose le palier suivant avec un découpage en
+  itérations numérotées à la suite (même format que `docs/10-roadmap-v0.2.md`) dans un nouveau fichier `docs/NN-roadmap-vX.Y.md`,
+  référence-le dans `README.md` (documentation et statut), `CLAUDE.md`, `docs/06-roadmap-suite.md` et cette commande,
+  et **arrête-toi** pour validation.
 - Vérifie que l'itération précédente est bien terminée (`npm run check` passe). Sinon, signale-le et arrête-toi.
 
 ## 2. Se documenter (ciblé)
@@ -63,7 +67,8 @@ ces durées, arrête-la et dis-le plutôt que d'attendre en silence.
 ## 6. Clôturer
 
 Si **tous** les critères sont atteints :
-- coche-les dans `docs/05-roadmap-poc.md` et coche l'itération dans la section « Statut » de `README.md` ;
+- coche-les dans la roadmap du palier et coche l'itération dans la section « Statut » de `README.md` ;
+  à la dernière itération d'un palier, évalue aussi ses critères de succès et passe le palier à « terminé » dans `README.md` ;
 - ajoute une entrée dans `docs/08-decisions.md` pour chaque décision structurante prise ;
 - note les dettes techniques dans `docs/06-roadmap-suite.md` si besoin ;
 - fais un dernier commit `docs: clôture itération N`.

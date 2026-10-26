@@ -20,7 +20,23 @@ Ces choix coûtent peu maintenant et évitent de gros chantiers plus tard :
 
 ## Paliers
 
+Chaque palier est détaillé en itérations (numérotées à la suite du POC) dans son propre fichier au moment de le commencer.
+
+| Palier | Statut | Détail |
+|---|---|---|
+| V0.2 : Contenu et vie du zoo | en cours | [`10-roadmap-v0.2.md`](10-roadmap-v0.2.md), itérations 5 à 11 |
+| V0.3 : Personnel et opérations | suivant (validé) | à détailler à la clôture de V0.2 |
+| V0.4 : Progression | ensuite (validé) | à détailler à la clôture de V0.3 |
+| V0.5 à V1.0 | plus tard | à détailler palier par palier |
+
+**Ordre retenu après le playtest du POC, validé par Pierre** (ADR-034) : V0.2 d'abord, parce que le fun tient à « placer un animal de
+plus » et qu'un zoo complet n'a rien à acheter ; puis V0.3, dont les salaires et les gardiens donnent un vrai poids à
+l'argent accumulé ; puis V0.4, dont la recherche aura assez d'espèces et de bâtiments à débloquer. V0.6 s'insère dès
+qu'un signal du tableau « Signaux pour changer de technique » est mesuré, pas avant.
+
 ### V0.2 : Contenu et vie du zoo
+
+Détaillé dans [`10-roadmap-v0.2.md`](10-roadmap-v0.2.md).
 
 - 10 à 12 espèces, nouveaux biomes (neige, jungle, désert), préférences de climat.
 - Variation d'espèces par âge (jeune / adulte), comportements propres (sieste, jeu, bain).
@@ -48,7 +64,7 @@ Ces choix coûtent peu maintenant et évitent de gros chantiers plus tard :
 - Relief par paliers (terraformation simple), rivières, lacs, ponts, rampes.
 - Enclos multi-niveaux, tunnels ou vitres d'observation.
 - Éditeur de plans (blueprints) de bâtiments et de zones, copier/coller de sections.
-- Cartes plus grandes (96×96, puis davantage) avec rendu par chunks et visibilité.
+- Cartes au-delà de 96×96 (V0.2 permet déjà d'acheter des parcelles 12×12 jusqu'à 96×96), rendu par chunks et visibilité.
 
 ### V0.6 : Performance et technique
 
@@ -92,6 +108,9 @@ Déclencheurs (voir tableau plus bas) :
 | Temps de chargement > 5 s sur connexion moyenne | Compression Draco/meshopt, chargement progressif |
 
 ## Dettes assumées du POC (à rembourser)
+
+Reprises dans le palier V0.2 (`10-roadmap-v0.2.md`) : confusion sable / chemin (itération 5, le sable devient le
+désert), annonce vocale des alertes et rythme de la journée (itération 11).
 
 - Pas de relief : la grille 2D plate est simple mais devra devenir une grille de hauteurs.
 - Animation des foules par `AnimationMixer` : coûteux au-delà de quelques centaines d'entités.

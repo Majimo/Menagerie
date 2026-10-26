@@ -134,6 +134,13 @@ Règle commune dès qu'une itération touche au rendu ou à l'UI : **vérificati
 
 ---
 
+## Suite
+
+Le POC est terminé. La suite se joue par paliers (`06-roadmap-suite.md`), chacun détaillé dans son propre fichier :
+palier V0.2, itérations 5 à 11, dans [`10-roadmap-v0.2.md`](10-roadmap-v0.2.md).
+
+---
+
 ## Hors itérations (backlog léger du POC)
 
 - Raccourcis clavier, annuler/refaire (les commandes en données facilitent le `undo`).

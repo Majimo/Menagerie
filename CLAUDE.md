@@ -43,7 +43,8 @@ npm run shots    # captures d'écran pour la revue visuelle
 
 ## Méthode de travail
 
-- Travailler **par itération** (`docs/05-roadmap-poc.md`). Ne pas anticiper l'itération suivante.
+- Travailler **par itération**, dans la roadmap du palier en cours : `docs/05-roadmap-poc.md` (itérations 0 à 4, terminé),
+  puis `docs/10-roadmap-v0.2.md` (itérations 5 à 11). Ne pas anticiper l'itération suivante.
 - La commande **`/jalon-suivant`** (`.claude/commands/jalon-suivant.md`) enchaîne automatiquement : choix de l'itération, plan, code, vérification, clôture, compte rendu.
 - Avant de coder une itération : relire ses critères d'acceptation, proposer un plan court, puis implémenter.
 - Une itération est terminée quand tous ses critères sont cochés **et** que `npm run check` et `npm run test:e2e` passent **et** que la revue des captures (`docs/09-verification-visuelle-et-accessibilite.md`) est faite.
