@@ -1,4 +1,4 @@
-import { BUILDINGS } from '../data/buildings';
+import { BUILDINGS, type BuildingKind } from '../data/buildings';
 import { tileCode } from '../data/terrain';
 import type { EnclosureId, GameState, World } from '../state';
 import { tileIndex } from './grid';
@@ -25,6 +25,10 @@ export interface VisitorNetwork {
   snackSpots: number[];
   /** Pour chaque tuile de `snackSpots`, le stand qu'elle dessert. */
   snackFacing: Map<number, number>;
+  /** Tuiles de chemin atteignables voisines d'un banc. */
+  benchSpots: number[];
+  /** Pour chaque tuile de `benchSpots`, le banc qu'elle dessert. */
+  benchFacing: Map<number, number>;
 }
 
 /** Le visiteur peut-il marcher sur cette tuile ? (chemin hors enclos) */
@@ -89,18 +93,8 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
     }
   }
 
-  const snackTiles = new Set<number>();
-  for (const building of Object.values(state.buildings)) {
-    if (BUILDINGS[building.kind].sellsSnacks) snackTiles.add(tileIndex(world, building.tile));
-  }
-  const snackSpots: number[] = [];
-  const snackFacing = new Map<number, number>();
-  for (const spot of sorted) {
-    const stand = openNeighbours(world, spot).find((n) => snackTiles.has(n));
-    if (stand === undefined) continue;
-    snackSpots.push(spot);
-    snackFacing.set(spot, stand);
-  }
+  const snack = serviceSpots(state, sorted, (kind) => BUILDINGS[kind].sellsSnacks);
+  const bench = serviceSpots(state, sorted, (kind) => BUILDINGS[kind].seats > 0);
 
   return {
     revision: world.revision,
@@ -111,7 +105,31 @@ function computeNetwork(state: Readonly<GameState>): VisitorNetwork {
     exitSide: connectedTiles(world, exit),
     viewSpots,
     viewFacing,
-    snackSpots,
-    snackFacing,
+    snackSpots: snack.spots,
+    snackFacing: snack.facing,
+    benchSpots: bench.spots,
+    benchFacing: bench.facing,
   };
+}
+
+/** Tuiles de chemin (triées) voisines d'un objet choisi par `accepts`, et l'objet que chacune dessert. */
+function serviceSpots(
+  state: Readonly<GameState>,
+  sorted: readonly number[],
+  accepts: (kind: BuildingKind) => boolean,
+): { spots: number[]; facing: Map<number, number> } {
+  const { world } = state;
+  const tiles = new Set<number>();
+  for (const building of Object.values(state.buildings)) {
+    if (accepts(building.kind)) tiles.add(tileIndex(world, building.tile));
+  }
+  const spots: number[] = [];
+  const facing = new Map<number, number>();
+  for (const spot of sorted) {
+    const target = openNeighbours(world, spot).find((n) => tiles.has(n));
+    if (target === undefined) continue;
+    spots.push(spot);
+    facing.set(spot, target);
+  }
+  return { spots, facing };
 }

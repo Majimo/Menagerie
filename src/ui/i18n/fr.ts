@@ -86,6 +86,8 @@ export const fr = {
   'visitorState.viewing': 'Observe l’enclos n° {id}',
   'visitorState.walkingToFood': 'Va au stand de snacks',
   'visitorState.eating': 'Mange un snack',
+  'visitorState.walkingToBench': 'Va s’asseoir sur un banc',
+  'visitorState.resting': 'Se repose sur un banc',
   'visitorState.leaving': 'Se dirige vers la sortie',
   'leave.done': 'a vu ce qu’il voulait voir',
   'leave.impatient': 'à bout de patience',
@@ -105,7 +107,7 @@ export const fr = {
   'tool.animal.help': 'Animaux : cliquer dans un enclos fermé pour acheter et placer l’animal choisi',
   'tool.object': 'Objets',
   'tool.object.help':
-    'Objets : nourrisseur (dans un enclos), décors qui enrichissent l’habitat, stand de snacks (au bord d’un chemin)',
+    'Objets : nourrisseur (dans un enclos), décors qui enrichissent l’habitat, stand de snacks et banc (au bord d’un chemin)',
   'tool.demolish': 'Démolir',
   'tool.demolish.help': 'Démolir : chemins, clôtures, eau et objets, la moitié du coût est remboursée',
 
@@ -116,6 +118,7 @@ export const fr = {
   'building.rock': 'Rocher',
   'building.bamboo': 'Bambou',
   'building.snack': 'Stand de snacks',
+  'building.bench': 'Banc',
 
   'time.label': 'Temps',
   'time.clock': 'Jour {day}, {time}',
@@ -211,6 +214,7 @@ export const fr = {
   'building.bamboo.plural': 'du bambou',
   'building.feeder.plural': 'des nourrisseurs',
   'building.snack.plural': 'des stands de snacks',
+  'building.bench.plural': 'des bancs',
 
   'camera.label': 'Caméra',
   'camera.rotateLeft': 'Tourner la vue à gauche (A)',

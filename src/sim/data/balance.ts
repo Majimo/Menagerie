@@ -124,6 +124,12 @@ export const balance = {
     /** Portée de la distance dans le choix : poids × 1 / (1 + distance / distanceScale). */
     distanceScale: 15,
     eatTicks: 30,
+    /** En dessous de cette patience, le visiteur cherche un banc libre avant de choisir un enclos. */
+    restBelow: 45,
+    /** Pause sur un banc, en ticks ; patience et satisfaction gagnées par tick assis. */
+    restTicks: 60,
+    restPatiencePerTick: 1,
+    restSatisfactionPerTick: 0.08,
     /** Satisfaction perdue quand la patience est épuisée. */
     impatientPenalty: 15,
     /** Ticks sans trajet possible avant que le visiteur abandonne (il disparaît, mécontent). */

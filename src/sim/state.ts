@@ -70,6 +70,8 @@ export type VisitorState =
   | 'viewing'
   | 'walkingToFood'
   | 'eating'
+  | 'walkingToBench'
+  | 'resting'
   | 'leaving';
 
 /** Avancement de la demande de trajet : le système `pathfinding` la traite avec un budget par tick. */
@@ -90,9 +92,9 @@ export interface Visitor {
   prevY: number;
   heading: number;
   state: VisitorState;
-  /** Ticks restants de l'observation ou du repas. */
+  /** Ticks restants de l'observation, du repas ou de la pause sur un banc. */
   stateTicks: number;
-  /** Tuile visée (zone d'observation, stand, sortie), -1 si aucune. */
+  /** Tuile visée (zone d'observation, stand, banc, sortie), -1 si aucune. */
   goal: number;
   pathStatus: PathStatus;
   /** Tuiles restantes du trajet, la prochaine en tête. */

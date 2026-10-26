@@ -5,7 +5,7 @@ import type { GameState, Visitor } from '../state';
 import { tileAt, tileIndex } from '../world/grid';
 import { visitorNetwork } from '../world/visitorNetwork';
 
-// Création des visiteurs et humeur affichée.
+// Création des visiteurs, humeur affichée et petits utilitaires de déplacement.
 
 /** Humeur visible (bulle au-dessus du visiteur, panneau d'inspection), de la plus urgente à la plus banale. */
 export type VisitorMood = 'blocked' | 'hungry' | 'bored' | 'unhappy' | 'joy' | 'sad' | 'happy' | 'neutral';
@@ -53,8 +53,7 @@ export function activeReaction(visitor: Readonly<Visitor>, tick: number): Visito
 /** Le visiteur ne peut plus rejoindre la sortie : aucun trajet, ou chemin coupé entre lui et la sortie. */
 export function isVisitorBlocked(state: Readonly<GameState>, visitor: Readonly<Visitor>): boolean {
   if (visitor.blockedTicks > 0) return true;
-  const tile = tileIndex(state.world, { x: Math.floor(visitor.x), y: Math.floor(visitor.y) });
-  return !visitorNetwork(state).exitSide.has(tile);
+  return !visitorNetwork(state).exitSide.has(currentTile(state, visitor));
 }
 
 /** `blocked` : résultat de `isVisitorBlocked`, calculé par l'appelant (il dépend du réseau de chemins). */
@@ -68,4 +67,33 @@ export function visitorMood(visitor: Readonly<Visitor>, tick: number, blocked: b
   if (visitor.satisfaction < 30) return 'unhappy';
   if (visitor.satisfaction >= 70) return 'happy';
   return 'neutral';
+}
+
+/** Demande un trajet vers `goal` : le système `pathfinding` le calculera. */
+export function requestPath(visitor: Visitor, goal: number): void {
+  visitor.goal = goal;
+  visitor.path = [];
+  visitor.pathStatus = 'pending';
+}
+
+export function currentTile(state: Readonly<GameState>, visitor: Readonly<Visitor>): number {
+  return tileIndex(state.world, { x: Math.floor(visitor.x), y: Math.floor(visitor.y) });
+}
+
+export function manhattan(state: Readonly<GameState>, a: number, b: number): number {
+  const { width } = state.world;
+  return Math.abs((a % width) - (b % width)) + Math.abs(Math.floor(a / width) - Math.floor(b / width));
+}
+
+export function nearest(state: Readonly<GameState>, from: number, tiles: readonly number[]): number {
+  let best = tiles[0] as number;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const tile of tiles) {
+    const distance = manhattan(state, from, tile);
+    if (distance < bestDistance) {
+      best = tile;
+      bestDistance = distance;
+    }
+  }
+  return best;
 }
